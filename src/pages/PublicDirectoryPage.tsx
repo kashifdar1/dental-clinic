@@ -1,33 +1,48 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
+import {
+  buildPublicDemoPath,
+  resolvePublicTenant,
+} from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { useTenant } from '../domain/TenantContext'
 import type { SpecialtyId } from '../domain/types'
 
 export function PublicDirectoryPage() {
-  const { organizationSlug } = useParams()
+  const { organizationSlug, cityCode, branchCode } = useParams()
+  const location = useLocation()
   const { data, organization: selectedOrganization } = useTenant()
-  const organization = organizationSlug
-    ? data.organizations.find((item) => item.slug === organizationSlug)
-    : selectedOrganization
+  const hostOverride = new URLSearchParams(location.search).get('host')
+  const tenant = resolvePublicTenant(data, {
+    hostname: window.location.hostname,
+    hostOverride,
+    organizationSlug,
+    cityCode,
+    branchCode,
+    fallbackOrganizationId: selectedOrganization.id,
+  })
+  const organization = tenant?.organization
+  const resolvedClinic = tenant?.clinic
   const [clinicId, setClinicId] = useState('all')
   const [specialtyId, setSpecialtyId] = useState<'all' | SpecialtyId>('all')
 
   useEffect(() => {
-    setClinicId('all')
+    setClinicId(resolvedClinic?.id ?? 'all')
     setSpecialtyId('all')
-  }, [organization?.id])
+  }, [organization?.id, resolvedClinic?.id])
 
   const clinics = useMemo(
     () =>
       organization
         ? data.clinics.filter(
-            (clinic) => clinic.organizationId === organization.id,
+            (clinic) =>
+              clinic.organizationId === organization.id &&
+              (!resolvedClinic || clinic.id === resolvedClinic.id),
           )
         : [],
-    [data.clinics, organization],
+    [data.clinics, organization, resolvedClinic],
   )
   const doctors = useMemo(
     () =>
@@ -48,15 +63,21 @@ export function PublicDirectoryPage() {
       (doctor) =>
         doctor.organizationId === organization?.id &&
         doctor.active &&
+        (!resolvedClinic || doctor.clinicId === resolvedClinic.id) &&
         doctor.specialties.includes(specialty.id),
     ),
   )
 
   if (!organization) return <Navigate to="/not-found" replace />
+  const homePath = buildPublicDemoPath(
+    organization,
+    resolvedClinic,
+    window.location.hostname,
+  )
 
   return (
     <div className="public-site">
-      <PublicHeader organization={organization} />
+      <PublicHeader organization={organization} homePath={homePath} />
 
       <main>
         <section className="public-hero">
@@ -73,7 +94,10 @@ export function PublicDirectoryPage() {
           </div>
           <div className="hero-note">
             <span className="hero-note-number">{doctors.length}</span>
-            <span>active practitioners across {clinics.length} clinics</span>
+            <span>
+              active practitioners across {clinics.length}{' '}
+              {clinics.length === 1 ? 'clinic' : 'clinics'}
+            </span>
           </div>
         </section>
 
@@ -84,21 +108,23 @@ export function PublicDirectoryPage() {
               <h2>Doctors who listen, explain, and care.</h2>
             </div>
             <div className="directory-filters">
-              <div className="field">
-                <label htmlFor="public-clinic-filter">Clinic</label>
-                <select
-                  id="public-clinic-filter"
-                  value={clinicId}
-                  onChange={(event) => setClinicId(event.target.value)}
-                >
-                  <option value="all">All clinics</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!resolvedClinic && clinics.length > 1 ? (
+                <div className="field">
+                  <label htmlFor="public-clinic-filter">Clinic</label>
+                  <select
+                    id="public-clinic-filter"
+                    value={clinicId}
+                    onChange={(event) => setClinicId(event.target.value)}
+                  >
+                    <option value="all">All clinics</option>
+                    {clinics.map((clinic) => (
+                      <option key={clinic.id} value={clinic.id}>
+                        {clinic.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div className="field">
                 <label htmlFor="public-specialty-filter">Specialty</label>
                 <select
@@ -167,7 +193,12 @@ export function PublicDirectoryPage() {
                       </div>
                       <Link
                         className="doctor-profile-link"
-                        to={`/clinic/${organization.slug}/doctors/${doctor.id}`}
+                        to={buildPublicDemoPath(
+                          organization,
+                          clinic,
+                          window.location.hostname,
+                          doctor.id,
+                        )}
                       >
                         View profile <span aria-hidden="true">→</span>
                       </Link>

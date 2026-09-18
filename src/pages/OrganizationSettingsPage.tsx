@@ -3,7 +3,18 @@ import { POLICY_PROFILES } from '../domain/policyRegistry'
 import { useTenant } from '../domain/TenantContext'
 
 export function OrganizationSettingsPage() {
-  const { organization, saveOrganizationSettings } = useTenant()
+  const {
+    organization,
+    clinic,
+    saveOrganizationSettings,
+    saveClinicRouting,
+  } = useTenant()
+  const [hosting, setHosting] = useState(organization.hostingSettings)
+  const [clinicRouting, setClinicRouting] = useState({
+    cityCode: clinic.cityCode,
+    branchCode: clinic.branchCode,
+    slug: clinic.slug,
+  })
   const [regional, setRegional] = useState(organization.regionalSettings)
   const [governance, setGovernance] = useState(
     organization.governanceSettings,
@@ -11,10 +22,16 @@ export function OrganizationSettingsPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
+    setHosting(organization.hostingSettings)
+    setClinicRouting({
+      cityCode: clinic.cityCode,
+      branchCode: clinic.branchCode,
+      slug: clinic.slug,
+    })
     setRegional(organization.regionalSettings)
     setGovernance(organization.governanceSettings)
     setSaved(false)
-  }, [organization])
+  }, [clinic, organization])
 
   function togglePolicy(id: string) {
     setGovernance((current) => ({
@@ -28,9 +45,11 @@ export function OrganizationSettingsPage() {
   function submit(event: FormEvent) {
     event.preventDefault()
     saveOrganizationSettings({
+      hostingSettings: hosting,
       regionalSettings: regional,
       governanceSettings: governance,
     })
+    saveClinicRouting(clinicRouting)
     setSaved(true)
   }
 
@@ -47,6 +66,105 @@ export function OrganizationSettingsPage() {
       </div>
 
       <form className="grid" onSubmit={submit}>
+        <section className="panel">
+          <h2>Public website hosting</h2>
+          <p className="muted" style={{ margin: '0.35rem 0 1rem' }}>
+            A standalone clinic uses its domain root. Multi-clinic
+            organizations use city and branch routes under one domain.
+          </p>
+          <div className="form-grid">
+            <div className="field">
+              <label htmlFor="hostingMode">Hosting mode</label>
+              <select
+                id="hostingMode"
+                value={hosting.mode}
+                onChange={(event) =>
+                  setHosting({
+                    ...hosting,
+                    mode: event.target.value as
+                      | 'standalone'
+                      | 'multi_clinic',
+                  })
+                }
+              >
+                <option value="standalone">Standalone clinic</option>
+                <option value="multi_clinic">Multi-clinic organization</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="primaryDomain">Primary domain</label>
+              <input
+                id="primaryDomain"
+                value={hosting.primaryDomain}
+                onChange={(event) =>
+                  setHosting({
+                    ...hosting,
+                    primaryDomain: event.target.value,
+                  })
+                }
+                placeholder="exampleclinic.com"
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="cityCode">Selected clinic city code</label>
+              <input
+                id="cityCode"
+                value={clinicRouting.cityCode}
+                onChange={(event) =>
+                  setClinicRouting({
+                    ...clinicRouting,
+                    cityCode: event.target.value,
+                  })
+                }
+                placeholder="lhr"
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="branchCode">Selected clinic branch code</label>
+              <input
+                id="branchCode"
+                value={clinicRouting.branchCode}
+                onChange={(event) =>
+                  setClinicRouting({
+                    ...clinicRouting,
+                    branchCode: event.target.value,
+                  })
+                }
+                placeholder="01"
+                required
+              />
+            </div>
+            <div className="field full">
+              <label htmlFor="clinicSlug">Selected clinic slug</label>
+              <input
+                id="clinicSlug"
+                value={clinicRouting.slug}
+                onChange={(event) =>
+                  setClinicRouting({
+                    ...clinicRouting,
+                    slug: event.target.value,
+                  })
+                }
+                placeholder="gulberg"
+                required
+              />
+            </div>
+            <div className="full import-message">
+              Public URL:{' '}
+              <strong>
+                https://{hosting.primaryDomain}
+                {hosting.mode === 'multi_clinic'
+                  ? `/${clinicRouting.cityCode || 'city'}/${
+                      clinicRouting.branchCode || 'branch'
+                    }`
+                  : '/'}
+              </strong>
+            </div>
+          </div>
+        </section>
+
         <section className="panel">
           <h2>Regional configuration</h2>
           <p className="muted" style={{ margin: '0.35rem 0 1rem' }}>

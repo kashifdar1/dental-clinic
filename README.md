@@ -49,8 +49,26 @@ Organization
 - **Market configuration:** `RegionalSettings` lives on each organization. Formatting uses standard `Intl` APIs instead of country-specific branches.
 - **Policy profiles:** governance profiles are declarative readiness templates. Selecting one does not make the product legally compliant.
 - **Doctor roster management:** individual add/edit/deactivate is the primary workflow. CSV import supports up to 500 validated rows across clinics accessible to the current organization membership.
+- **Availability:** stored as a structured window (`days`, `startTime`, `endTime` in 24-hour form) and edited through a day/time picker. The public summary string is derived from that window, so listings stay consistently formatted.
 - **Public directory:** active doctors are published as cards at `/clinic/:organizationSlug`; each profile includes specialties, qualifications, clinic, availability, languages, and contact actions.
 - **Admin workspace:** management routes live under `/admin` and are separated from the public website. Authentication remains a production requirement.
+- **Domain-aware tenancy:** standalone clinics resolve at their domain root; multi-clinic organizations resolve branches from `/{cityCode}/{branchCode}`.
+
+## Public domain routing
+
+The same frontend deployment can serve many organization domains:
+
+- Standalone: `https://lassanipolyclinic.com/`
+- Standalone doctor: `https://lassanipolyclinic.com/doctors/:doctorId`
+- Multi-clinic branch: `https://indushospital.com/lhr/01`
+- Multi-clinic doctor: `https://indushospital.com/lhr/01/doctors/:doctorId`
+
+For local development, `?host=` simulates the incoming custom domain:
+
+- `http://127.0.0.1:5173/?host=lassanipolyclinic.com`
+- `http://127.0.0.1:5173/lhr/01?host=indushospital.com`
+
+Organization admins configure hosting mode and primary domain under **Organization settings**. City and branch codes are configured for the selected clinic. Production still requires DNS records, TLS certificates, and a CDN/reverse proxy configured to forward all approved domains to this application.
 
 ## Doctor CSV format
 

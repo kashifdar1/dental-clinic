@@ -15,6 +15,7 @@ import {
   loadAppData,
   resetDemoData,
   setTenantContext,
+  updateClinicRouting,
   updateOrganizationSettings,
   upsertPatient,
   upsertPractitioner,
@@ -23,6 +24,7 @@ import type {
   AppData,
   Clinic,
   GovernanceSettings,
+  HostingSettings,
   Membership,
   Organization,
   Patient,
@@ -55,8 +57,14 @@ interface TenantState {
     },
   ) => void
   saveOrganizationSettings: (input: {
+    hostingSettings: HostingSettings
     regionalSettings: RegionalSettings
     governanceSettings: GovernanceSettings
+  }) => void
+  saveClinicRouting: (input: {
+    cityCode: string
+    branchCode: string
+    slug: string
   }) => void
   resetDemo: () => void
 }
@@ -141,12 +149,20 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const saveOrganizationSettings = useCallback(
     (input: {
+      hostingSettings: HostingSettings
       regionalSettings: RegionalSettings
       governanceSettings: GovernanceSettings
     }) => {
       setData((current) =>
         updateOrganizationSettings(current, current.context, input),
       )
+    },
+    [],
+  )
+
+  const saveClinicRouting = useCallback(
+    (input: { cityCode: string; branchCode: string; slug: string }) => {
+      setData((current) => updateClinicRouting(current, current.context, input))
     },
     [],
   )
@@ -164,6 +180,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     bulkImportPractitioners,
     savePatient,
     saveOrganizationSettings,
+    saveClinicRouting,
     resetDemo,
   }
 

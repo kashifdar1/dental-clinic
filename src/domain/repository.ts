@@ -6,14 +6,17 @@ import type {
   Practitioner,
   PractitionerImportInput,
   GovernanceSettings,
+  HostingSettings,
   RegionalSettings,
   SpecialtyId,
   TenantContext,
 } from './types'
 import { modulesForSpecialties } from './specialtyRegistry'
+import { normalizeHostname } from './publicTenantResolver'
+import { formatAvailability } from './availability'
 
 const STORAGE_KEY =
-  import.meta.env.VITE_STORAGE_KEY?.trim() || 'clinic-hub-demo-v5'
+  import.meta.env.VITE_STORAGE_KEY?.trim() || 'clinic-hub-demo-v7'
 
 function clone<T>(value: T): T {
   return structuredClone(value)
@@ -110,6 +113,13 @@ export function getActiveModules(practitioners: Practitioner[]) {
   return modulesForSpecialties(getActiveSpecialtyIds(practitioners))
 }
 
+function resolveAvailabilitySummary(
+  input: Pick<Practitioner, 'availability' | 'availabilitySummary'>,
+): string | undefined {
+  if (input.availability) return formatAvailability(input.availability)
+  return input.availabilitySummary?.trim() || undefined
+}
+
 export function upsertPractitioner(
   data: AppData,
   context: TenantContext,
@@ -139,7 +149,8 @@ export function upsertPractitioner(
       professionalSummary: input.professionalSummary?.trim() || undefined,
       qualifications: input.qualifications?.map((item) => item.trim()).filter(Boolean),
       languages: input.languages?.map((item) => item.trim()).filter(Boolean),
-      availabilitySummary: input.availabilitySummary?.trim() || undefined,
+      availability: input.availability,
+      availabilitySummary: resolveAvailabilitySummary(input),
       acceptingPatients: input.acceptingPatients ?? false,
     }
   } else {
@@ -155,7 +166,8 @@ export function upsertPractitioner(
       professionalSummary: input.professionalSummary?.trim() || undefined,
       qualifications: input.qualifications?.map((item) => item.trim()).filter(Boolean),
       languages: input.languages?.map((item) => item.trim()).filter(Boolean),
-      availabilitySummary: input.availabilitySummary?.trim() || undefined,
+      availability: input.availability,
+      availabilitySummary: resolveAvailabilitySummary(input),
       acceptingPatients: input.acceptingPatients ?? false,
     })
   }
@@ -273,6 +285,7 @@ export function updateOrganizationSettings(
   data: AppData,
   context: TenantContext,
   input: {
+    hostingSettings: HostingSettings
     regionalSettings: RegionalSettings
     governanceSettings: GovernanceSettings
   },
@@ -282,14 +295,75 @@ export function updateOrganizationSettings(
     (organization) => organization.id === context.organizationId,
   )
   if (index < 0) throw new Error('Organization not found')
+  const primaryDomain = normalizeHostname(input.hostingSettings.primaryDomain)
+  if (!primaryDomain) throw new Error('Primary domain is required')
+  if (
+    next.organizations.some(
+      (organization) =>
+        organization.id !== context.organizationId &&
+        normalizeHostname(organization.hostingSettings.primaryDomain) ===
+          primaryDomain,
+    )
+  ) {
+    throw new Error('Primary domain is already assigned')
+  }
 
   next.organizations[index] = {
     ...next.organizations[index],
+    hostingSettings: {
+      ...input.hostingSettings,
+      primaryDomain,
+    },
     regionalSettings: { ...input.regionalSettings },
     governanceSettings: {
       ...input.governanceSettings,
       policyProfileIds: [...new Set(input.governanceSettings.policyProfileIds)],
     },
+  }
+  writeRaw(next)
+  return next
+}
+
+export function updateClinicRouting(
+  data: AppData,
+  context: TenantContext,
+  input: {
+    cityCode: string
+    branchCode: string
+    slug: string
+  },
+): AppData {
+  const next = clone(data)
+  const clinicIndex = next.clinics.findIndex(
+    (clinic) =>
+      clinic.id === context.clinicId &&
+      clinic.organizationId === context.organizationId,
+  )
+  if (clinicIndex < 0) throw new Error('Clinic not found')
+
+  const cityCode = input.cityCode.trim().toLowerCase()
+  const branchCode = input.branchCode.trim().toLowerCase()
+  const slug = input.slug.trim().toLowerCase()
+  if (!cityCode || !branchCode || !slug) {
+    throw new Error('Clinic route values are required')
+  }
+  if (
+    next.clinics.some(
+      (clinic) =>
+        clinic.id !== context.clinicId &&
+        clinic.organizationId === context.organizationId &&
+        clinic.cityCode.toLowerCase() === cityCode &&
+        clinic.branchCode.toLowerCase() === branchCode,
+    )
+  ) {
+    throw new Error('Clinic route is already assigned')
+  }
+
+  next.clinics[clinicIndex] = {
+    ...next.clinics[clinicIndex],
+    cityCode,
+    branchCode,
+    slug,
   }
   writeRaw(next)
   return next

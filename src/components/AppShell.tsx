@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
+import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { useTenant } from '../domain/TenantContext'
 
 const appName = import.meta.env.VITE_APP_NAME?.trim() || 'Clinic Hub'
@@ -69,7 +70,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))
           )}
           <div className="nav-section-label">Public website</div>
-          <Link className="nav-link" to={`/clinic/${organization.slug}`}>
+          <Link
+            className="nav-link"
+            to={buildPublicDemoPath(
+              organization,
+              clinic,
+              window.location.hostname,
+            )}
+          >
             View website
           </Link>
         </nav>

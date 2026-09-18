@@ -1,28 +1,52 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
+import {
+  buildPublicDemoPath,
+  resolvePublicTenant,
+} from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
 import { useTenant } from '../domain/TenantContext'
 
 export function PublicDoctorPage() {
-  const { organizationSlug, doctorId } = useParams()
-  const { data } = useTenant()
-  const organization = data.organizations.find(
-    (item) => item.slug === organizationSlug,
-  )
-  const doctor = data.practitioners.find(
+  const { organizationSlug, cityCode, branchCode, doctorId } = useParams()
+  const location = useLocation()
+  const { data, organization: selectedOrganization } = useTenant()
+  const tenant = resolvePublicTenant(data, {
+    hostname: window.location.hostname,
+    hostOverride: new URLSearchParams(location.search).get('host'),
+    organizationSlug,
+    cityCode,
+    branchCode,
+    fallbackOrganizationId: selectedOrganization.id,
+  })
+  const organization = tenant?.organization
+  const candidateDoctor = data.practitioners.find(
     (item) =>
       item.id === doctorId &&
       item.organizationId === organization?.id &&
       item.active,
   )
-
-  if (!organization || !doctor) return <Navigate to="/not-found" replace />
-
-  const clinic = data.clinics.find(
+  const clinic =
+    tenant?.clinic ??
+    (organizationSlug && candidateDoctor
+      ? data.clinics.find((item) => item.id === candidateDoctor.clinicId)
+      : undefined)
+  const doctor = data.practitioners.find(
     (item) =>
-      item.id === doctor.clinicId &&
-      item.organizationId === organization.id,
+      item.id === doctorId &&
+      item.organizationId === organization?.id &&
+      item.clinicId === clinic?.id &&
+      item.active,
+  )
+
+  if (!organization || !clinic || !doctor)
+    return <Navigate to="/not-found" replace />
+
+  const homePath = buildPublicDemoPath(
+    organization,
+    clinic,
+    window.location.hostname,
   )
   const specialties = doctor.specialties.map(
     (specialtyId) => SPECIALTY_MODULES[specialtyId],
@@ -31,10 +55,10 @@ export function PublicDoctorPage() {
 
   return (
     <div className="public-site">
-      <PublicHeader organization={organization} />
+      <PublicHeader organization={organization} homePath={homePath} />
 
       <main className="doctor-profile-page">
-        <Link className="back-link" to={`/clinic/${organization.slug}`}>
+        <Link className="back-link" to={homePath}>
           ← Back to all doctors
         </Link>
 

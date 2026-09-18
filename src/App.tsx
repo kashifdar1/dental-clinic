@@ -22,6 +22,18 @@ export default function App() {
               element={<PublicDirectoryPage />}
             />
             <Route
+              path="/doctors/:doctorId"
+              element={<PublicDoctorPage />}
+            />
+            <Route
+              path="/:cityCode/:branchCode"
+              element={<PublicDirectoryPage />}
+            />
+            <Route
+              path="/:cityCode/:branchCode/doctors/:doctorId"
+              element={<PublicDoctorPage />}
+            />
+            <Route
               path="/clinic/:organizationSlug"
               element={<PublicDirectoryPage />}
             />

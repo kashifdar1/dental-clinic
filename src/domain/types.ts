@@ -24,10 +24,18 @@ export interface GovernanceSettings {
   consentTrackingRequired: boolean
 }
 
+export type HostingMode = 'standalone' | 'multi_clinic'
+
+export interface HostingSettings {
+  mode: HostingMode
+  primaryDomain: string
+}
+
 export interface Organization {
   id: string
   name: string
   slug: string
+  hostingSettings: HostingSettings
   regionalSettings: RegionalSettings
   governanceSettings: GovernanceSettings
 }
@@ -37,7 +45,17 @@ export interface Clinic {
   organizationId: string
   name: string
   city: string
+  cityCode: string
+  branchCode: string
+  slug: string
   timezone: string
+}
+
+/** Day numbers follow `Date.getDay()`: 0 is Sunday through 6 is Saturday. */
+export interface AvailabilityWindow {
+  days: number[]
+  startTime: string
+  endTime: string
 }
 
 export interface Practitioner {
@@ -52,6 +70,7 @@ export interface Practitioner {
   professionalSummary?: string
   qualifications?: string[]
   languages?: string[]
+  availability?: AvailabilityWindow
   availabilitySummary?: string
   acceptingPatients?: boolean
 }

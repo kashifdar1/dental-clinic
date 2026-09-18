@@ -1,8 +1,14 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { AvailabilityDialog } from '../components/AvailabilityDialog'
 import { PractitionerImportPanel } from '../components/PractitionerImportPanel'
+import { formatAvailability } from '../domain/availability'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { useTenant } from '../domain/TenantContext'
-import type { Practitioner, SpecialtyId } from '../domain/types'
+import type {
+  AvailabilityWindow,
+  Practitioner,
+  SpecialtyId,
+} from '../domain/types'
 
 const emptyForm = {
   fullName: '',
@@ -13,7 +19,7 @@ const emptyForm = {
   professionalSummary: '',
   qualifications: '',
   languages: '',
-  availabilitySummary: '',
+  availability: null as AvailabilityWindow | null,
   acceptingPatients: true,
 }
 
@@ -21,6 +27,7 @@ export function PractitionersPage() {
   const { practitioners, savePractitioner, activeModules } = useTenant()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const options = useMemo(() => allSpecialtyOptions(), [])
 
   function startCreate() {
@@ -39,7 +46,7 @@ export function PractitionersPage() {
       professionalSummary: practitioner.professionalSummary ?? '',
       qualifications: practitioner.qualifications?.join(', ') ?? '',
       languages: practitioner.languages?.join(', ') ?? '',
-      availabilitySummary: practitioner.availabilitySummary ?? '',
+      availability: practitioner.availability ?? null,
       acceptingPatients: practitioner.acceptingPatients ?? false,
     })
   }
@@ -75,7 +82,7 @@ export function PractitionersPage() {
         .split(',')
         .map((item) => item.trim())
         .filter(Boolean),
-      availabilitySummary: form.availabilitySummary,
+      availability: form.availability ?? undefined,
       acceptingPatients: form.acceptingPatients,
     })
     startCreate()
@@ -92,6 +99,7 @@ export function PractitionersPage() {
       professionalSummary: practitioner.professionalSummary,
       qualifications: practitioner.qualifications,
       languages: practitioner.languages,
+      availability: practitioner.availability,
       availabilitySummary: practitioner.availabilitySummary,
       acceptingPatients: practitioner.acceptingPatients,
     })
@@ -110,7 +118,7 @@ export function PractitionersPage() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(280px, 360px) 1fr', gap: '1rem' }}>
+      <div className="admin-split">
         <form className="panel form-grid" onSubmit={onSubmit}>
           <div className="full">
             <h2>{editingId ? 'Edit practitioner' : 'Add practitioner'}</h2>
@@ -155,9 +163,7 @@ export function PractitionersPage() {
             />
           </div>
           <div className="field full">
-            <label htmlFor="qualifications">
-              Qualifications (comma-separated)
-            </label>
+            <label htmlFor="qualifications">Qualifications</label>
             <input
               id="qualifications"
               value={form.qualifications}
@@ -166,26 +172,38 @@ export function PractitionersPage() {
               }
               placeholder="MBBS, FCPS Cardiology"
             />
+            <span className="field-hint">Separate each entry with a comma.</span>
           </div>
-          <div className="field">
-            <label htmlFor="languages">Languages (comma-separated)</label>
+          <div className="field full">
+            <label htmlFor="languages">Languages</label>
             <input
               id="languages"
               value={form.languages}
               onChange={(e) => setForm({ ...form, languages: e.target.value })}
               placeholder="English, Urdu"
             />
+            <span className="field-hint">Separate each entry with a comma.</span>
           </div>
-          <div className="field">
-            <label htmlFor="availability">Public availability</label>
-            <input
-              id="availability"
-              value={form.availabilitySummary}
-              onChange={(e) =>
-                setForm({ ...form, availabilitySummary: e.target.value })
-              }
-              placeholder="Monday–Friday · 9:00 AM–2:00 PM"
-            />
+          <div className="field full">
+            <label>Public availability</label>
+            <button
+              className="btn secondary availability-trigger"
+              type="button"
+              onClick={() => setAvailabilityOpen(true)}
+            >
+              {form.availability
+                ? formatAvailability(form.availability)
+                : 'Set days and hours'}
+            </button>
+            {form.availability ? (
+              <button
+                className="btn ghost availability-clear"
+                type="button"
+                onClick={() => setForm({ ...form, availability: null })}
+              >
+                Clear availability
+              </button>
+            ) : null}
           </div>
           <div className="field full">
             <label>Specialties</label>
@@ -301,6 +319,17 @@ export function PractitionersPage() {
       <div style={{ marginTop: '1rem' }}>
         <PractitionerImportPanel />
       </div>
+
+      {availabilityOpen ? (
+        <AvailabilityDialog
+          value={form.availability}
+          onCancel={() => setAvailabilityOpen(false)}
+          onSave={(availability) => {
+            setForm((current) => ({ ...current, availability }))
+            setAvailabilityOpen(false)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

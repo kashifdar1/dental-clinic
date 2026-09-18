@@ -36,7 +36,7 @@ export function PatientsPage() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(280px, 360px) 1fr', gap: '1rem' }}>
+      <div className="admin-split">
         <form className="panel form-grid" onSubmit={onSubmit}>
           <div className="full">
             <h2>Add patient</h2>

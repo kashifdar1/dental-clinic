@@ -95,6 +95,10 @@ describe('tenant repository', () => {
   it('stores regional and governance settings on one organization only', () => {
     const data = resetDemoData()
     const updated = updateOrganizationSettings(data, data.context, {
+      hostingSettings: {
+        mode: 'multi_clinic',
+        primaryDomain: 'health.example.ae',
+      },
       regionalSettings: {
         countryCode: 'AE',
         locale: 'en-AE',
