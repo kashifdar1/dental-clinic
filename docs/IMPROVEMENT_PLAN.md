@@ -183,7 +183,7 @@ validated before starting the next one.
 - [x] Public pages set `document.title` and a meta description per page.
 - [x] Anchor links in `PublicHeader` use plain `<a href="#doctors">` or a scroll effect;
       router `Link` does not scroll to hashes on same-page navigation.
-- [ ] Clinic model gains `address`, `phone`, `email`, `hours`, `mapUrl`; the public contact
+- [x] Clinic model gains `address`, `phone`, `email`, `hours`, `mapUrl`; the public contact
       block renders them instead of name and city only.
 
 ## Phase 3: features, in priority order

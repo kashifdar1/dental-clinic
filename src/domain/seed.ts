@@ -64,6 +64,9 @@ export const DEMO_DATA: AppData = {
       timezone: 'Asia/Karachi',
       phone: '+92 21 111 111 111',
       email: 'clifton@indushospital.com',
+      address: 'Clifton Block 2, Karachi',
+      hours: 'Mon–Sat · 9:00 AM–6:00 PM',
+      mapUrl: 'https://maps.google.com/?q=Indus+Clifton+Clinic',
     },
     {
       id: 'clinic_aurora_east',
@@ -76,6 +79,9 @@ export const DEMO_DATA: AppData = {
       timezone: 'Asia/Karachi',
       phone: '+92 42 111 111 111',
       email: 'gulberg@indushospital.com',
+      address: 'Gulberg III, Lahore',
+      hours: 'Mon–Sat · 9:00 AM–6:00 PM',
+      mapUrl: 'https://maps.google.com/?q=Indus+Gulberg+Clinic',
     },
     {
       id: 'clinic_harbor_downtown',
@@ -88,6 +94,9 @@ export const DEMO_DATA: AppData = {
       timezone: 'Asia/Karachi',
       phone: '+92 42 111 222 333',
       email: 'hello@lassaanipolyclinic.com',
+      address: 'Main Boulevard, Lahore',
+      hours: 'Mon–Sun · 10:00 AM–8:00 PM',
+      mapUrl: 'https://maps.google.com/?q=Lasaani+Poly+Clinic',
     },
   ],
   practitioners: [

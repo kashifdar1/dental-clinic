@@ -41,6 +41,9 @@ describe('OrganizationSettingsPage', () => {
     renderPage()
 
     expect(screen.getByRole('group', { name: 'Policy profiles' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Clinic address')).toBeInTheDocument()
+    expect(screen.getByLabelText('Clinic hours')).toBeInTheDocument()
+    expect(screen.getByLabelText('Map URL')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Save organization settings' }))
 

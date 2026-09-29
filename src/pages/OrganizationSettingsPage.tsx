@@ -17,6 +17,11 @@ export function OrganizationSettingsPage() {
     cityCode: clinic.cityCode,
     branchCode: clinic.branchCode,
     slug: clinic.slug,
+    phone: clinic.phone ?? '',
+    email: clinic.email ?? '',
+    address: clinic.address ?? '',
+    hours: clinic.hours ?? '',
+    mapUrl: clinic.mapUrl ?? '',
   })
   const [regional, setRegional] = useState(organization.regionalSettings)
   const [governance, setGovernance] = useState(
@@ -29,6 +34,11 @@ export function OrganizationSettingsPage() {
   const cityCode = clinic.cityCode
   const branchCode = clinic.branchCode
   const clinicSlug = clinic.slug
+  const clinicPhone = clinic.phone ?? ''
+  const clinicEmail = clinic.email ?? ''
+  const clinicAddress = clinic.address ?? ''
+  const clinicHours = clinic.hours ?? ''
+  const clinicMapUrl = clinic.mapUrl ?? ''
   const countryCode = organization.regionalSettings.countryCode
   const locale = organization.regionalSettings.locale
   const currency = organization.regionalSettings.currency
@@ -47,6 +57,11 @@ export function OrganizationSettingsPage() {
       cityCode,
       branchCode,
       slug: clinicSlug,
+      phone: clinicPhone,
+      email: clinicEmail,
+      address: clinicAddress,
+      hours: clinicHours,
+      mapUrl: clinicMapUrl,
     })
     setRegional({
       countryCode,
@@ -71,6 +86,11 @@ export function OrganizationSettingsPage() {
     cityCode,
     clinic.id,
     clinicSlug,
+    clinicPhone,
+    clinicEmail,
+    clinicAddress,
+    clinicHours,
+    clinicMapUrl,
     consentTrackingRequired,
     countryCode,
     currency,
@@ -210,6 +230,58 @@ export function OrganizationSettingsPage() {
                 }
                 placeholder="gulberg"
                 required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicPhone">Clinic phone</label>
+              <input
+                id="clinicPhone"
+                value={clinicRouting.phone}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, phone: event.target.value })
+                }
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicEmail">Clinic email</label>
+              <input
+                id="clinicEmail"
+                type="email"
+                value={clinicRouting.email}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, email: event.target.value })
+                }
+              />
+            </div>
+            <div className="field full">
+              <label htmlFor="clinicAddress">Clinic address</label>
+              <input
+                id="clinicAddress"
+                value={clinicRouting.address}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, address: event.target.value })
+                }
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicHours">Clinic hours</label>
+              <input
+                id="clinicHours"
+                value={clinicRouting.hours}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, hours: event.target.value })
+                }
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicMapUrl">Map URL</label>
+              <input
+                id="clinicMapUrl"
+                type="url"
+                value={clinicRouting.mapUrl}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, mapUrl: event.target.value })
+                }
               />
             </div>
             <div className="full import-message">

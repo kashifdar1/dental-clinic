@@ -289,6 +289,11 @@ export function updateClinicRouting(
     cityCode: string
     branchCode: string
     slug: string
+    phone?: string
+    email?: string
+    address?: string
+    hours?: string
+    mapUrl?: string
   },
 ): AppData {
   const next = clone(data)
@@ -332,6 +337,11 @@ export function updateClinicRouting(
     cityCode,
     branchCode,
     slug,
+    phone: input.phone?.trim() || undefined,
+    email: input.email?.trim() || undefined,
+    address: input.address?.trim() || undefined,
+    hours: input.hours?.trim() || undefined,
+    mapUrl: input.mapUrl?.trim() || undefined,
   }
   return next
 }

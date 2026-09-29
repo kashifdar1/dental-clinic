@@ -51,6 +51,9 @@ export interface Clinic {
   timezone: string
   phone?: string
   email?: string
+  address?: string
+  hours?: string
+  mapUrl?: string
 }
 
 /** Day numbers follow `Date.getDay()`: 0 is Sunday through 6 is Saturday. */

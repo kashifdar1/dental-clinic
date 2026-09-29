@@ -211,7 +211,15 @@ export function PublicDirectoryPage() {
             {clinics.map((clinic) => (
               <div key={clinic.id}>
                 <strong>{clinic.name}</strong>
-                <span>{clinic.city}</span>
+                <span>{clinic.address || clinic.city}</span>
+                {clinic.hours ? <span>{clinic.hours}</span> : null}
+                {clinic.phone ? <a href={`tel:${clinic.phone}`}>{clinic.phone}</a> : null}
+                {clinic.email ? <a href={`mailto:${clinic.email}`}>{clinic.email}</a> : null}
+                {clinic.mapUrl ? (
+                  <a href={clinic.mapUrl} target="_blank" rel="noreferrer">
+                    Directions
+                  </a>
+                ) : null}
               </div>
             ))}
           </div>

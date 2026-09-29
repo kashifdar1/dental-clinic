@@ -72,6 +72,11 @@ interface TenantState {
     cityCode: string
     branchCode: string
     slug: string
+    phone?: string
+    email?: string
+    address?: string
+    hours?: string
+    mapUrl?: string
   }) => Promise<MutationResult>
   resetDemo: () => void
 }

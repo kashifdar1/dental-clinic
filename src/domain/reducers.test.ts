@@ -69,6 +69,28 @@ describe('pure reducers', () => {
     ).toThrow('Clinic slug is already assigned')
   })
 
+  it('stores clinic contact details with routing settings', () => {
+    const data = cloneDemo()
+    const next = updateClinicRouting(data, data.context, {
+      cityCode: 'khi',
+      branchCode: '01',
+      slug: 'clifton',
+      phone: '+92 21 999 0000',
+      email: 'new@example.com',
+      address: 'New address',
+      hours: 'Weekdays',
+      mapUrl: 'https://maps.example.com/clinic',
+    })
+
+    expect(next.clinics[0]).toMatchObject({
+      phone: '+92 21 999 0000',
+      email: 'new@example.com',
+      address: 'New address',
+      hours: 'Weekdays',
+      mapUrl: 'https://maps.example.com/clinic',
+    })
+  })
+
   it('does not persist a derived availability summary', () => {
     const data = cloneDemo()
     const next = upsertPractitioner(data, data.context, {
