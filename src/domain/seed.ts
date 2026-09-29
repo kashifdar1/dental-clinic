@@ -62,6 +62,8 @@ export const DEMO_DATA: AppData = {
       branchCode: '01',
       slug: 'clifton',
       timezone: 'Asia/Karachi',
+      phone: '+92 21 111 111 111',
+      email: 'clifton@indushospital.com',
     },
     {
       id: 'clinic_aurora_east',
@@ -72,6 +74,8 @@ export const DEMO_DATA: AppData = {
       branchCode: '01',
       slug: 'gulberg',
       timezone: 'Asia/Karachi',
+      phone: '+92 42 111 111 111',
+      email: 'gulberg@indushospital.com',
     },
     {
       id: 'clinic_harbor_downtown',
@@ -82,6 +86,8 @@ export const DEMO_DATA: AppData = {
       branchCode: '01',
       slug: 'main',
       timezone: 'Asia/Karachi',
+      phone: '+92 42 111 222 333',
+      email: 'hello@lassaanipolyclinic.com',
     },
   ],
   practitioners: [

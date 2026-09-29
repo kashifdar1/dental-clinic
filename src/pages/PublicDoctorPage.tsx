@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
 import { formatAvailability } from '../domain/availability'
+import { getPublicContact } from '../domain/publicContact'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -30,6 +31,8 @@ export function PublicDoctorPage() {
 
   if (!organization || !clinic || !doctor)
     return <Navigate to="/not-found" replace />
+
+  const publicContact = getPublicContact(doctor, clinic)
 
   const homePath = buildPublicDemoPath(
     organization,
@@ -73,12 +76,16 @@ export function PublicDoctorPage() {
                 'Contact the clinic for more information about this practitioner.'}
             </p>
             <div className="btn-row">
-              <a className="btn" href={`tel:${doctor.phone}`}>
-                Call {doctor.phone}
-              </a>
-              <a className="btn secondary" href={`mailto:${doctor.email}`}>
-                Email doctor
-              </a>
+              {publicContact.phone ? (
+                <a className="btn" href={`tel:${publicContact.phone}`}>
+                  Call {publicContact.phone}
+                </a>
+              ) : null}
+              {publicContact.email ? (
+                <a className="btn secondary" href={`mailto:${publicContact.email}`}>
+                  Email clinic
+                </a>
+              ) : null}
             </div>
           </div>
         </section>

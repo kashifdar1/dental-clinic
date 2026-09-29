@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
+import { can } from '../domain/policy'
 import { useTenant } from '../domain/TenantContext'
 
 const appName = import.meta.env.VITE_APP_NAME?.trim() || 'Clinic Hub'
@@ -31,24 +32,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin" end>
             Dashboard
           </NavLink>
-          <NavLink
-            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            to="/admin/practitioners"
-          >
-            Practitioners
-          </NavLink>
-          <NavLink
-            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            to="/admin/patients"
-          >
-            Patients
-          </NavLink>
-          <NavLink
-            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            to="/admin/settings"
-          >
-            Organization settings
-          </NavLink>
+          {can(membership, 'managePractitioners') ? (
+            <NavLink
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              to="/admin/practitioners"
+            >
+              Practitioners
+            </NavLink>
+          ) : null}
+          {can(membership, 'managePatients') ? (
+            <NavLink
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              to="/admin/patients"
+            >
+              Patients
+            </NavLink>
+          ) : null}
+          {can(membership, 'manageOrganization') ? (
+            <NavLink
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              to="/admin/settings"
+            >
+              Organization settings
+            </NavLink>
+          ) : null}
 
           <div className="nav-section-label">Active modules</div>
           {activeModules.length === 0 ? (

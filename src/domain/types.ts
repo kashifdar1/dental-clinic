@@ -49,6 +49,8 @@ export interface Clinic {
   branchCode: string
   slug: string
   timezone: string
+  phone?: string
+  email?: string
 }
 
 /** Day numbers follow `Date.getDay()`: 0 is Sunday through 6 is Saturday. */
@@ -73,6 +75,10 @@ export interface Practitioner {
   availability?: AvailabilityWindow
   availabilitySummary?: string
   acceptingPatients?: boolean
+  publicContact?: {
+    phone?: string
+    email?: string
+  }
 }
 
 export type PractitionerImportInput = Omit<

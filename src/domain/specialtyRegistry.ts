@@ -68,6 +68,17 @@ export const SPECIALTY_MODULES: Record<SpecialtyId, SpecialtyModule> = {
   },
 }
 
+export const SPECIALTY_OPTIONS = Object.values(SPECIALTY_MODULES).sort((a, b) =>
+  a.label.localeCompare(b.label),
+)
+
+export const slugToSpecialty: Record<string, SpecialtyId> = Object.fromEntries(
+  Object.values(SPECIALTY_MODULES).map((module) => [
+    module.path.split('/').pop() ?? module.id,
+    module.id,
+  ]),
+)
+
 export function modulesForSpecialties(specialtyIds: SpecialtyId[]): SpecialtyModule[] {
   const unique = [...new Set(specialtyIds)]
   return unique
@@ -77,7 +88,5 @@ export function modulesForSpecialties(specialtyIds: SpecialtyId[]): SpecialtyMod
 }
 
 export function allSpecialtyOptions(): SpecialtyModule[] {
-  return Object.values(SPECIALTY_MODULES).sort((a, b) =>
-    a.label.localeCompare(b.label),
-  )
+  return SPECIALTY_OPTIONS
 }

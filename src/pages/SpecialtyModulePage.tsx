@@ -1,19 +1,10 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
+import { SPECIALTY_MODULES, slugToSpecialty } from '../domain/specialtyRegistry'
 import { useTenant } from '../domain/TenantContext'
-import type { SpecialtyId } from '../domain/types'
-
-const PATH_TO_SPECIALTY: Record<string, SpecialtyId> = {
-  'general-medicine': 'general_medicine',
-  gynecology: 'gynecology',
-  dentistry: 'dentistry',
-  pediatrics: 'pediatrics',
-  cardiology: 'cardiology',
-}
 
 export function SpecialtyModulePage() {
   const { moduleSlug = '' } = useParams()
-  const specialtyId = PATH_TO_SPECIALTY[moduleSlug]
+  const specialtyId = slugToSpecialty[moduleSlug]
   const { practitioners, patients, activeModules } = useTenant()
 
   if (!specialtyId) {

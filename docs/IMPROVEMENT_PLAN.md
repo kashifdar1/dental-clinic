@@ -141,13 +141,13 @@ validated before starting the next one.
       `validatePractitioner` and `validatePatient` used by every path; drop `slug` or use it.
 - [ ] **Stop persisting derived data.** `availabilitySummary` is stored next to
       `availability`. Derive at read time; keep the string only as legacy free-text input.
-- [ ] **Registry lookups.** `allSpecialtyOptions()` sorts on every call and is called inside
+- [x] **Registry lookups.** `allSpecialtyOptions()` sorts on every call and is called inside
       render loops. Export a memoized sorted constant and a `slugToSpecialty` map derived from
       `SpecialtyModule.path`; delete `PATH_TO_SPECIALTY` in `SpecialtyModulePage`.
-- [ ] **Separate public contact from identity email.** Doctor profiles expose the
+- [x] **Separate public contact from identity email.** Doctor profiles expose the
       practitioner's personal email and phone, and that email is also the uniqueness key. Add
       `publicContact?: { phone?: string; email?: string }` defaulting to the clinic's contact.
-- [ ] **Policy function for roles.** `membership.role` is display-only. Add
+- [x] **Policy function for roles.** `membership.role` is display-only. Add
       `can(membership, action)` in `src/domain/policy.ts` and use it to hide write actions.
       No auth yet; this only sets the pattern.
 
