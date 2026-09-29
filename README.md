@@ -25,7 +25,7 @@ Copy `.env.example` to `.env` if you want to override the app name or storage ke
 
 1. Open `/` for the public clinic website and doctor directory.
 2. Select a clinic or specialty, then open a doctor card for their public profile and contact details.
-3. Open `/admin` for the management dashboard.
+3. Open the [admin portal](/admin) for the management dashboard.
 4. Add, edit, deactivate, or reactivate a doctor under **Practitioners**. Public cards update immediately.
 5. Switch organization to **Sehat Family Clinics** — patients and practitioners change; Indus data is not visible.
 6. Use **Reset demo data** on the dashboard if you want the seeded state again.

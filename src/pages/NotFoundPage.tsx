@@ -10,7 +10,10 @@ export function NotFoundPage() {
         </p>
         <div className="btn-row" style={{ justifyContent: 'center', marginTop: '1.25rem' }}>
           <Link className="btn" to="/">
-            Back to dashboard
+            Back to clinic website
+          </Link>
+          <Link className="btn secondary" to="/admin">
+            Admin portal
           </Link>
         </div>
       </div>

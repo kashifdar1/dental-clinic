@@ -22,9 +22,6 @@ export function PublicHeader({
       <nav className="public-nav" aria-label="Public navigation">
         <Link to={`${homePath}#doctors`}>Our doctors</Link>
         <Link to={`${homePath}#contact`}>Contact</Link>
-        <Link className="btn secondary" to="/admin">
-          Admin portal
-        </Link>
       </nav>
     </header>
   )
