@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AvailabilityDialog } from '../components/AvailabilityDialog'
 import { PractitionerImportPanel } from '../components/PractitionerImportPanel'
 import { formatAvailability } from '../domain/availability'
@@ -24,12 +24,19 @@ const emptyForm = {
 }
 
 export function PractitionersPage() {
-  const { practitioners, savePractitioner, activeModules } = useTenant()
+  const { clinic, practitioners, savePractitioner, activeModules } = useTenant()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [error, setError] = useState('')
   const options = useMemo(() => allSpecialtyOptions(), [])
+
+  useEffect(() => {
+    setEditingId(null)
+    setForm(emptyForm)
+    setAvailabilityOpen(false)
+    setError('')
+  }, [clinic.id])
 
   function startCreate() {
     setEditingId(null)

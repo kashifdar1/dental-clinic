@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { formatDate } from '../domain/regionalFormatting'
 import { useTenant } from '../domain/TenantContext'
 
@@ -11,9 +11,14 @@ const emptyForm = {
 }
 
 export function PatientsPage() {
-  const { organization, patients, practitioners, savePatient } = useTenant()
+  const { clinic, organization, patients, practitioners, savePatient } = useTenant()
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setForm(emptyForm)
+    setError('')
+  }, [clinic.id])
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()

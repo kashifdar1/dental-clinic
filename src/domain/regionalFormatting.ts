@@ -4,12 +4,12 @@ export function formatDate(
   value: string,
   settings: RegionalSettings,
 ): string {
-  const date = new Date(`${value}T00:00:00`)
+  const date = new Date(`${value}T00:00:00Z`)
   if (Number.isNaN(date.getTime())) return value
 
   return new Intl.DateTimeFormat(settings.locale, {
     dateStyle: 'medium',
-    timeZone: settings.defaultTimeZone,
+    timeZone: 'UTC',
   }).format(date)
 }
 

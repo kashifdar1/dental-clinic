@@ -2,14 +2,24 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
-import { TenantProvider } from '../domain/TenantContext'
+import { TenantProvider, useTenant } from '../domain/TenantContext'
 import { resetDemoData } from '../domain/repository'
 import { PractitionersPage } from './PractitionersPage'
 
 function renderPage() {
+  function ClinicSwitcher() {
+    const { switchClinic } = useTenant()
+    return (
+      <button type="button" onClick={() => switchClinic('clinic_aurora_east')}>
+        Switch clinic
+      </button>
+    )
+  }
+
   return render(
     <TenantProvider>
       <MemoryRouter>
+        <ClinicSwitcher />
         <PractitionersPage />
       </MemoryRouter>
     </TenantProvider>,
@@ -35,5 +45,18 @@ describe('PractitionersPage', () => {
       'Select at least one specialty.',
     )
     expect(screen.queryByText('Dr. Unassigned')).not.toBeInTheDocument()
+  })
+
+  it('clears an edit form when the selected clinic changes', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    expect(screen.getByLabelText('Full name')).toHaveValue('Dr. Syed Imran Garderzi')
+
+    await user.click(screen.getByRole('button', { name: 'Switch clinic' }))
+
+    expect(screen.getByLabelText('Full name')).toHaveValue('')
+    expect(screen.getByRole('heading', { name: 'Add practitioner' })).toBeInTheDocument()
   })
 })
