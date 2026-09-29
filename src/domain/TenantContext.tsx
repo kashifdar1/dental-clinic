@@ -13,13 +13,14 @@ import {
   getScopedPractitioners,
   importPractitioners,
   loadAppData,
-  resetDemoData,
   setTenantContext,
   updateClinicRouting,
   updateOrganizationSettings,
   upsertPatient,
   upsertPractitioner,
 } from './repository'
+import { DEMO_DATA } from './seed'
+import { LocalStorageStore } from './store'
 import type {
   AppData,
   Clinic,
@@ -49,27 +50,29 @@ interface TenantState {
   activeModules: SpecialtyModule[]
   switchOrganization: (organizationId: string) => void
   switchClinic: (clinicId: string) => void
+  status: 'idle' | 'saving' | 'error'
+  error: string | null
   savePractitioner: (
     input: Omit<Practitioner, 'id' | 'organizationId' | 'clinicId'> & {
       id?: string
     },
-  ) => MutationResult
-  bulkImportPractitioners: (inputs: PractitionerImportInput[]) => MutationResult
+  ) => Promise<MutationResult>
+  bulkImportPractitioners: (inputs: PractitionerImportInput[]) => Promise<MutationResult>
   savePatient: (
     input: Omit<Patient, 'id' | 'organizationId' | 'clinicId'> & {
       id?: string
     },
-  ) => MutationResult
+  ) => Promise<MutationResult>
   saveOrganizationSettings: (input: {
     hostingSettings: HostingSettings
     regionalSettings: RegionalSettings
     governanceSettings: GovernanceSettings
-  }) => MutationResult
+  }) => Promise<MutationResult>
   saveClinicRouting: (input: {
     cityCode: string
     branchCode: string
     slug: string
-  }) => MutationResult
+  }) => Promise<MutationResult>
   resetDemo: () => void
 }
 
@@ -108,34 +111,39 @@ function resolveScoped(data: AppData) {
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(() => loadAppData())
+  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const store = useMemo(() => new LocalStorageStore(), [])
   const scoped = useMemo(() => resolveScoped(data), [data])
 
   const applyMutation = useCallback(
-    (mutation: (current: AppData) => AppData): MutationResult => {
-      let result: MutationResult = { ok: true }
-      setData((current) => {
-        try {
-          return mutation(current)
-        } catch (error) {
-          result = {
-            ok: false,
-            message: error instanceof Error ? error.message : 'Unable to save changes',
-          }
-          return current
-        }
-      })
-      return result
+    async (mutation: (current: AppData) => AppData): Promise<MutationResult> => {
+      setStatus('saving')
+      setError(null)
+      try {
+        const next = mutation(data)
+        await store.save(next)
+        setData(next)
+        setStatus('idle')
+        return { ok: true }
+      } catch (caught) {
+        const message =
+          caught instanceof Error ? caught.message : 'Unable to save changes'
+        setStatus('error')
+        setError(message)
+        return { ok: false, message }
+      }
     },
-    [],
+    [data, store],
   )
 
   const switchOrganization = useCallback((organizationId: string) => {
-    setData((current) => setTenantContext(current, { organizationId }))
-  }, [])
+    void applyMutation((current) => setTenantContext(current, { organizationId }))
+  }, [applyMutation])
 
   const switchClinic = useCallback((clinicId: string) => {
-    setData((current) => setTenantContext(current, { clinicId }))
-  }, [])
+    void applyMutation((current) => setTenantContext(current, { clinicId }))
+  }, [applyMutation])
 
   const savePractitioner = useCallback(
     (
@@ -195,12 +203,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   )
 
   const resetDemo = useCallback(() => {
-    setData(resetDemoData())
-  }, [])
+    void applyMutation(() => structuredClone(DEMO_DATA))
+  }, [applyMutation])
 
   const value: TenantState = {
     data,
     ...scoped,
+    status,
+    error,
     switchOrganization,
     switchClinic,
     savePractitioner,

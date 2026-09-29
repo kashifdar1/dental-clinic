@@ -112,7 +112,7 @@ validated before starting the next one.
 
 ## Phase 1: architecture, next PR, before any new feature
 
-- [ ] **Separate pure reducers from persistence.** Today every `upsert*` in
+- [x] **Separate pure reducers from persistence.** Today every `upsert*` in
       `src/domain/repository.ts` calls `writeRaw` and returns synchronously, and the provider
       callbacks return `void`, so a real backend (async, can fail, has loading state) cannot
       be substituted. Target shape:

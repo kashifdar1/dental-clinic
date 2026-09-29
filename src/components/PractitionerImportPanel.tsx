@@ -77,10 +77,10 @@ export function PractitionerImportPanel() {
     setPreview(nextPreview)
   }
 
-  function confirmImport() {
+  async function confirmImport() {
     if (!canImport) return
     const inputs = validRows.flatMap((row) => (row.input ? [row.input] : []))
-    const result = bulkImportPractitioners(inputs)
+    const result = await bulkImportPractitioners(inputs)
     if (!result.ok) {
       setMessage(result.message)
       return

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
@@ -39,6 +39,8 @@ describe('PatientsPage', () => {
     await user.type(screen.getByLabelText('Full name'), 'Draft patient')
     await user.click(screen.getByRole('button', { name: 'Switch clinic' }))
 
-    expect(screen.getByLabelText('Full name')).toHaveValue('')
+    await waitFor(() =>
+      expect(screen.getByLabelText('Full name')).toHaveValue(''),
+    )
   })
 })

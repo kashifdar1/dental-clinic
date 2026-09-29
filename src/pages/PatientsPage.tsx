@@ -20,14 +20,14 @@ export function PatientsPage() {
     setError('')
   }, [clinic.id])
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
     if (!form.fullName.trim()) {
       setError('Full name is required.')
       return
     }
-    const result = savePatient({
+    const result = await savePatient({
       fullName: form.fullName,
       dateOfBirth: form.dateOfBirth,
       phone: form.phone,

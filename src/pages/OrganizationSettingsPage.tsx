@@ -92,10 +92,10 @@ export function OrganizationSettingsPage() {
     }))
   }
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
-    const organizationResult = saveOrganizationSettings({
+    const organizationResult = await saveOrganizationSettings({
       hostingSettings: hosting,
       regionalSettings: regional,
       governanceSettings: governance,
@@ -104,7 +104,7 @@ export function OrganizationSettingsPage() {
       setError(organizationResult.message)
       return
     }
-    const clinicResult = saveClinicRouting(clinicRouting)
+    const clinicResult = await saveClinicRouting(clinicRouting)
     if (!clinicResult.ok) {
       setError(clinicResult.message)
       return

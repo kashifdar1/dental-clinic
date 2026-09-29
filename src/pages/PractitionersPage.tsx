@@ -72,7 +72,7 @@ export function PractitionersPage() {
     })
   }
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
     if (!form.fullName.trim()) {
@@ -83,7 +83,7 @@ export function PractitionersPage() {
       setError('Select at least one specialty.')
       return
     }
-    const result = savePractitioner({
+    const result = await savePractitioner({
       id: editingId ?? undefined,
       fullName: form.fullName,
       email: form.email,
@@ -109,8 +109,8 @@ export function PractitionersPage() {
     startCreate()
   }
 
-  function setActive(practitioner: Practitioner, active: boolean) {
-    const result = savePractitioner({
+  async function setActive(practitioner: Practitioner, active: boolean) {
+    const result = await savePractitioner({
       id: practitioner.id,
       fullName: practitioner.fullName,
       email: practitioner.email,
