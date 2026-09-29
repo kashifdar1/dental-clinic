@@ -28,11 +28,13 @@ export function PractitionersPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
+  const [error, setError] = useState('')
   const options = useMemo(() => allSpecialtyOptions(), [])
 
   function startCreate() {
     setEditingId(null)
     setForm(emptyForm)
+    setError('')
   }
 
   function startEdit(practitioner: Practitioner) {
@@ -65,8 +67,16 @@ export function PractitionersPage() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!form.fullName.trim() || form.specialties.length === 0) return
-    savePractitioner({
+    setError('')
+    if (!form.fullName.trim()) {
+      setError('Full name is required.')
+      return
+    }
+    if (form.specialties.length === 0) {
+      setError('Select at least one specialty.')
+      return
+    }
+    const result = savePractitioner({
       id: editingId ?? undefined,
       fullName: form.fullName,
       email: form.email,
@@ -85,11 +95,15 @@ export function PractitionersPage() {
       availability: form.availability ?? undefined,
       acceptingPatients: form.acceptingPatients,
     })
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
     startCreate()
   }
 
   function setActive(practitioner: Practitioner, active: boolean) {
-    savePractitioner({
+    const result = savePractitioner({
       id: practitioner.id,
       fullName: practitioner.fullName,
       email: practitioner.email,
@@ -103,6 +117,10 @@ export function PractitionersPage() {
       availabilitySummary: practitioner.availabilitySummary,
       acceptingPatients: practitioner.acceptingPatients,
     })
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
     if (editingId === practitioner.id) startCreate()
   }
 
@@ -250,6 +268,11 @@ export function PractitionersPage() {
               </button>
             ) : null}
           </div>
+          {error ? (
+            <div className="form-error full" role="alert">
+              {error}
+            </div>
+          ) : null}
         </form>
 
         <div className="panel table-wrap">

@@ -20,18 +20,68 @@ export function OrganizationSettingsPage() {
     organization.governanceSettings,
   )
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  const hostingMode = organization.hostingSettings.mode
+  const primaryDomain = organization.hostingSettings.primaryDomain
+  const cityCode = clinic.cityCode
+  const branchCode = clinic.branchCode
+  const clinicSlug = clinic.slug
+  const countryCode = organization.regionalSettings.countryCode
+  const locale = organization.regionalSettings.locale
+  const currency = organization.regionalSettings.currency
+  const defaultTimeZone = organization.regionalSettings.defaultTimeZone
+  const callingCode = organization.regionalSettings.callingCode
+  const policyProfileIds = organization.governanceSettings.policyProfileIds.join('|')
+  const dataResidencyRegion = organization.governanceSettings.dataResidencyRegion
+  const recordRetentionDays = organization.governanceSettings.recordRetentionDays
+  const requireMfa = organization.governanceSettings.requireMfa
+  const auditTrailRequired = organization.governanceSettings.auditTrailRequired
+  const consentTrackingRequired = organization.governanceSettings.consentTrackingRequired
 
   useEffect(() => {
-    setHosting(organization.hostingSettings)
+    setHosting({ mode: hostingMode, primaryDomain })
     setClinicRouting({
-      cityCode: clinic.cityCode,
-      branchCode: clinic.branchCode,
-      slug: clinic.slug,
+      cityCode,
+      branchCode,
+      slug: clinicSlug,
     })
-    setRegional(organization.regionalSettings)
-    setGovernance(organization.governanceSettings)
+    setRegional({
+      countryCode,
+      locale,
+      currency,
+      defaultTimeZone,
+      callingCode,
+    })
+    setGovernance({
+      policyProfileIds: policyProfileIds ? policyProfileIds.split('|') : [],
+      dataResidencyRegion,
+      recordRetentionDays,
+      requireMfa,
+      auditTrailRequired,
+      consentTrackingRequired,
+    })
     setSaved(false)
-  }, [clinic, organization])
+  }, [
+    auditTrailRequired,
+    branchCode,
+    callingCode,
+    cityCode,
+    clinic.id,
+    clinicSlug,
+    consentTrackingRequired,
+    countryCode,
+    currency,
+    dataResidencyRegion,
+    defaultTimeZone,
+    hostingMode,
+    locale,
+    organization.id,
+    policyProfileIds,
+    primaryDomain,
+    recordRetentionDays,
+    requireMfa,
+  ])
 
   function togglePolicy(id: string) {
     setGovernance((current) => ({
@@ -44,12 +94,21 @@ export function OrganizationSettingsPage() {
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    saveOrganizationSettings({
+    setError('')
+    const organizationResult = saveOrganizationSettings({
       hostingSettings: hosting,
       regionalSettings: regional,
       governanceSettings: governance,
     })
-    saveClinicRouting(clinicRouting)
+    if (!organizationResult.ok) {
+      setError(organizationResult.message)
+      return
+    }
+    const clinicResult = saveClinicRouting(clinicRouting)
+    if (!clinicResult.ok) {
+      setError(clinicResult.message)
+      return
+    }
     setSaved(true)
   }
 
@@ -346,6 +405,11 @@ export function OrganizationSettingsPage() {
           </button>
           {saved ? <span className="chip">Saved</span> : null}
         </div>
+        {error ? (
+          <div className="form-error" role="alert">
+            {error}
+          </div>
+        ) : null}
       </form>
     </div>
   )

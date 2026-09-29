@@ -34,6 +34,10 @@ import type {
   SpecialtyModule,
 } from './types'
 
+export type MutationResult =
+  | { ok: true }
+  | { ok: false; message: string }
+
 interface TenantState {
   data: AppData
   organization: Organization
@@ -49,23 +53,23 @@ interface TenantState {
     input: Omit<Practitioner, 'id' | 'organizationId' | 'clinicId'> & {
       id?: string
     },
-  ) => void
-  bulkImportPractitioners: (inputs: PractitionerImportInput[]) => void
+  ) => MutationResult
+  bulkImportPractitioners: (inputs: PractitionerImportInput[]) => MutationResult
   savePatient: (
     input: Omit<Patient, 'id' | 'organizationId' | 'clinicId'> & {
       id?: string
     },
-  ) => void
+  ) => MutationResult
   saveOrganizationSettings: (input: {
     hostingSettings: HostingSettings
     regionalSettings: RegionalSettings
     governanceSettings: GovernanceSettings
-  }) => void
+  }) => MutationResult
   saveClinicRouting: (input: {
     cityCode: string
     branchCode: string
     slug: string
-  }) => void
+  }) => MutationResult
   resetDemo: () => void
 }
 
@@ -106,6 +110,25 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(() => loadAppData())
   const scoped = useMemo(() => resolveScoped(data), [data])
 
+  const applyMutation = useCallback(
+    (mutation: (current: AppData) => AppData): MutationResult => {
+      let result: MutationResult = { ok: true }
+      setData((current) => {
+        try {
+          return mutation(current)
+        } catch (error) {
+          result = {
+            ok: false,
+            message: error instanceof Error ? error.message : 'Unable to save changes',
+          }
+          return current
+        }
+      })
+      return result
+    },
+    [],
+  )
+
   const switchOrganization = useCallback((organizationId: string) => {
     setData((current) => setTenantContext(current, { organizationId }))
   }, [])
@@ -120,11 +143,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         id?: string
       },
     ) => {
-      setData((current) =>
+      return applyMutation((current) =>
         upsertPractitioner(current, current.context, input),
       )
     },
-    [],
+    [applyMutation],
   )
 
   const savePatient = useCallback(
@@ -133,18 +156,20 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         id?: string
       },
     ) => {
-      setData((current) => upsertPatient(current, current.context, input))
+      return applyMutation((current) =>
+        upsertPatient(current, current.context, input),
+      )
     },
-    [],
+    [applyMutation],
   )
 
   const bulkImportPractitioners = useCallback(
     (inputs: PractitionerImportInput[]) => {
-      setData((current) =>
+      return applyMutation((current) =>
         importPractitioners(current, current.context, inputs),
       )
     },
-    [],
+    [applyMutation],
   )
 
   const saveOrganizationSettings = useCallback(
@@ -153,18 +178,20 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       regionalSettings: RegionalSettings
       governanceSettings: GovernanceSettings
     }) => {
-      setData((current) =>
+      return applyMutation((current) =>
         updateOrganizationSettings(current, current.context, input),
       )
     },
-    [],
+    [applyMutation],
   )
 
   const saveClinicRouting = useCallback(
     (input: { cityCode: string; branchCode: string; slug: string }) => {
-      setData((current) => updateClinicRouting(current, current.context, input))
+      return applyMutation((current) =>
+        updateClinicRouting(current, current.context, input),
+      )
     },
-    [],
+    [applyMutation],
   )
 
   const resetDemo = useCallback(() => {

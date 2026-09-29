@@ -13,17 +13,26 @@ const emptyForm = {
 export function PatientsPage() {
   const { organization, patients, practitioners, savePatient } = useTenant()
   const [form, setForm] = useState(emptyForm)
+  const [error, setError] = useState('')
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!form.fullName.trim()) return
-    savePatient({
+    setError('')
+    if (!form.fullName.trim()) {
+      setError('Full name is required.')
+      return
+    }
+    const result = savePatient({
       fullName: form.fullName,
       dateOfBirth: form.dateOfBirth,
       phone: form.phone,
       assignedPractitionerId: form.assignedPractitionerId || undefined,
       notes: form.notes || undefined,
     })
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
     setForm(emptyForm)
   }
 
@@ -99,6 +108,11 @@ export function PatientsPage() {
               Add patient
             </button>
           </div>
+          {error ? (
+            <div className="form-error full" role="alert">
+              {error}
+            </div>
+          ) : null}
         </form>
 
         <div className="panel table-wrap">

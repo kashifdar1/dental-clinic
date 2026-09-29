@@ -80,7 +80,11 @@ export function PractitionerImportPanel() {
   function confirmImport() {
     if (!canImport) return
     const inputs = validRows.flatMap((row) => (row.input ? [row.input] : []))
-    bulkImportPractitioners(inputs)
+    const result = bulkImportPractitioners(inputs)
+    if (!result.ok) {
+      setMessage(result.message)
+      return
+    }
     setPreview(null)
     setFileName('')
     setMessage(

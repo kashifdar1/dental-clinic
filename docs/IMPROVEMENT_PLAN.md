@@ -15,6 +15,45 @@ Baseline at review time: `npm run typecheck`, `npm run lint`, `npm run test` all
   every future feature builds on, so doing them after features means doing the features twice.
 - **Later (Phases 2 and 3):** UI consistency and new features, in the listed order.
 
+## Execution priority
+
+Use this sequence when breaking the checklist into implementation slices. Each slice should be
+validated before starting the next one.
+
+1. **Phase 0A: stop mutation crashes and silent loss.** Change provider mutations to return a
+      result, render save errors on settings, practitioners, and patients, and add page tests for
+      duplicate routes plus the no-specialty practitioner submit.
+2. **Phase 0B: fix state and data correctness.** Fix the settings saved-state effect, reset edit
+      forms on clinic changes, and correct calendar-date formatting for dates of birth.
+3. **Phase 0C: close tenant and UI correctness gaps.** Restrict production `?host=` overrides,
+      fix practitioner checkbox styling, and make the specialty thumbnail fallback reachable.
+4. **Phase 1A: establish the persistence boundary.** Extract pure reducers, add the store
+      interface and local-storage implementation, then expose provider saving/error status while
+      preserving repository compatibility.
+5. **Phase 1B: make persisted data evolvable.** Add schema versioning, migration, and runtime
+      validation on reads. This must land before new persisted entities or fields.
+6. **Phase 1C: enforce domain invariants centrally.** Validate practitioner, patient, clinic
+      route, assignment, and email rules through every write path; stop persisting derived
+      availability summaries.
+7. **Phase 1D: separate public and admin context.** Add the public tenant provider and remove
+      public-page dependence on the admin session. Then add the shared admin layout and membership
+      guard seam.
+8. **Phase 1E: prepare public and registry contracts.** Add public contact fields, policy
+      actions, and memoized specialty lookups. These are prerequisites for safe profile and role-
+      aware features, but lower risk than the persistence and tenancy work.
+9. **Phase 2: improve workflow and accessibility.** Add save status UI, reset confirmation,
+      native dialog behavior, fieldsets, patient search/edit/deactivate, responsive tables, public
+      metadata and anchor behavior, then split CSS only after behavior is stable.
+10. **Phase 3A: make the public clinic profile real.** Add clinic contact/profile fields and
+       the settings editor, including media and links. This supplies the data model for later
+       directory and appointment work.
+11. **Phase 3B: build patient-facing discovery and conversion.** Add directory availability
+       search, doctor photos, then appointment requests and the admin appointment inbox.
+12. **Phase 3C: add governance and localization.** Add audit events, visit notes, richer CSV,
+       Urdu/RTL handling, and the login stub with role-gated routes.
+13. **Phase 3D: optimize delivery.** Add SEO prerendering after the public tree is decoupled
+       and the public routes have stable data contracts.
+
 ## How to work this plan
 
 - Work phases in order. Do not start Phase 3 features on top of the current persistence
