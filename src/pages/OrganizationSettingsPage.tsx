@@ -339,8 +339,8 @@ export function OrganizationSettingsPage() {
                 required
               />
             </div>
-            <div className="field full">
-              <label>Policy profiles</label>
+            <fieldset className="field full">
+              <legend>Policy profiles</legend>
               <div className="checklist">
                 {POLICY_PROFILES.map((profile) => (
                   <label key={profile.id}>
@@ -356,7 +356,7 @@ export function OrganizationSettingsPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
             <div className="field full checklist">
               <label>
                 <input

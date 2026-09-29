@@ -174,7 +174,7 @@ validated before starting the next one.
 - [x] Confirm dialog before **Reset demo data**.
 - [x] Replace the hand-rolled modal in `AvailabilityDialog` with native `<dialog>` and
       `showModal()` for focus trap and focus restore. Keep the existing `.modal` styles.
-- [ ] Group labels ("Specialties", "Public availability", "Policy profiles") become
+- [x] Group labels ("Specialties", "Public availability", "Policy profiles") become
       `<fieldset><legend>`; a `<label>` with no control is an accessibility error.
 - [ ] Patients page: edit, deactivate, search. `upsertPatient` already supports `id`.
 - [ ] Admin tables collapse to card rows under 620px.

@@ -36,6 +36,9 @@ describe('PractitionersPage', () => {
     const user = userEvent.setup()
     renderPage()
 
+    expect(screen.getByRole('group', { name: 'Public availability' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Specialties' })).toBeInTheDocument()
+
     await user.type(screen.getByLabelText('Full name'), 'Dr. Unassigned')
     await user.type(screen.getByLabelText('Email'), 'unassigned@example.com')
     await user.type(screen.getByLabelText('Phone'), '+92 300 000 0000')

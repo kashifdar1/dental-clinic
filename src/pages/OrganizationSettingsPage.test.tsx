@@ -40,6 +40,8 @@ describe('OrganizationSettingsPage', () => {
     const user = userEvent.setup()
     renderPage()
 
+    expect(screen.getByRole('group', { name: 'Policy profiles' })).toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'Save organization settings' }))
 
     expect(await screen.findByText('Saved')).toBeInTheDocument()

@@ -217,8 +217,8 @@ export function PractitionersPage() {
             />
             <span className="field-hint">Separate each entry with a comma.</span>
           </div>
-          <div className="field full">
-            <label>Public availability</label>
+          <fieldset className="field full">
+            <legend>Public availability</legend>
             <button
               className="btn secondary availability-trigger"
               type="button"
@@ -237,9 +237,9 @@ export function PractitionersPage() {
                 Clear availability
               </button>
             ) : null}
-          </div>
-          <div className="field full">
-            <label>Specialties</label>
+          </fieldset>
+          <fieldset className="field full">
+            <legend>Specialties</legend>
             <div className="checklist">
               {options.map((option) => (
                 <label key={option.id}>
@@ -252,7 +252,7 @@ export function PractitionersPage() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="field full">
             <label>
               <input
