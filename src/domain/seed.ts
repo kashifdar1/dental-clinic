@@ -99,7 +99,6 @@ export const DEMO_DATA: AppData = {
       qualifications: ['MBBS', 'Family Medicine'],
       languages: ['English', 'Urdu'],
       availability: { days: [1, 2, 3, 4], startTime: '09:00', endTime: '14:00' },
-      availabilitySummary: 'Monday–Thursday · 9:00 AM–2:00 PM',
       acceptingPatients: true,
     },
     {
@@ -116,7 +115,6 @@ export const DEMO_DATA: AppData = {
       qualifications: ['MBBS', 'FCPS Obstetrics & Gynecology'],
       languages: ['English', 'Urdu'],
       availability: { days: [2, 3, 4, 5, 6], startTime: '11:00', endTime: '17:00' },
-      availabilitySummary: 'Tuesday–Saturday · 11:00 AM–5:00 PM',
       acceptingPatients: true,
     },
     {
@@ -137,7 +135,6 @@ export const DEMO_DATA: AppData = {
         startTime: '10:00',
         endTime: '18:00',
       },
-      availabilitySummary: 'Monday–Saturday · 10:00 AM–6:00 PM',
       acceptingPatients: true,
     },
     {
@@ -154,7 +151,6 @@ export const DEMO_DATA: AppData = {
       qualifications: ['MBBS', 'FCPS Cardiology'],
       languages: ['English', 'Urdu'],
       availability: { days: [1, 3, 5], startTime: '15:00', endTime: '19:00' },
-      availabilitySummary: 'Monday, Wednesday, Friday · 3:00 PM–7:00 PM',
       acceptingPatients: true,
     },
     {
@@ -171,7 +167,6 @@ export const DEMO_DATA: AppData = {
       qualifications: ['MBBS', 'Family Medicine'],
       languages: ['English', 'Urdu'],
       availability: { days: [1, 2, 3, 4, 5], startTime: '09:00', endTime: '13:00' },
-      availabilitySummary: 'Monday–Friday · 9:00 AM–1:00 PM',
       acceptingPatients: true,
     },
     {
@@ -192,7 +187,6 @@ export const DEMO_DATA: AppData = {
         startTime: '12:00',
         endTime: '18:00',
       },
-      availabilitySummary: 'Tuesday–Sunday · 12:00 PM–6:00 PM',
       acceptingPatients: true,
     },
   ],

@@ -1,6 +1,7 @@
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
+import { formatAvailability } from '../domain/availability'
 import {
   buildPublicDemoPath,
   resolvePublicTenant,
@@ -108,7 +109,11 @@ export function PublicDoctorPage() {
               </div>
               <div>
                 <dt>Availability</dt>
-                <dd>{doctor.availabilitySummary || 'Contact clinic'}</dd>
+                <dd>
+                  {doctor.availability
+                    ? formatAvailability(doctor.availability)
+                    : doctor.availabilitySummary || 'Contact clinic'}
+                </dd>
               </div>
               <div>
                 <dt>Languages</dt>

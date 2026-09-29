@@ -135,7 +135,7 @@ validated before starting the next one.
 - [ ] **Layout routes.** `src/App.tsx` repeats `<AppShell>` five times. Use
       `<Route element={<AdminLayout />}>` with `<Outlet />`, `React.lazy` the admin tree, and
       add a `RequireMembership` guard element as the future auth seam.
-- [ ] **Centralize invariants per entity.** Email uniqueness is enforced in CSV import but not
+- [x] **Centralize invariants per entity.** Email uniqueness is enforced in CSV import but not
       in `upsertPractitioner`. `assignedPractitionerId` is never checked against the clinic.
       `clinic.slug` is stored, uniqueness unchecked, and routing never reads it. Add
       `validatePractitioner` and `validatePatient` used by every path; drop `slug` or use it.

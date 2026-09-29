@@ -1,4 +1,3 @@
-import { formatAvailability } from './availability'
 import { normalizeHostname } from './publicTenantResolver'
 import type {
   AppData,
@@ -34,11 +33,42 @@ function createId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().slice(0, 8)}`
 }
 
-function resolveAvailabilitySummary(
-  input: Pick<Practitioner, 'availability' | 'availabilitySummary'>,
-): string | undefined {
-  if (input.availability) return formatAvailability(input.availability)
-  return input.availabilitySummary?.trim() || undefined
+function assertUniquePractitionerEmail(
+  data: AppData,
+  organizationId: string,
+  email: string,
+  currentId?: string,
+): void {
+  const normalizedEmail = email.trim().toLowerCase()
+  if (!normalizedEmail) throw new Error('Practitioner email is required')
+  if (
+    data.practitioners.some(
+      (practitioner) =>
+        practitioner.id !== currentId &&
+        practitioner.organizationId === organizationId &&
+        practitioner.email.trim().toLowerCase() === normalizedEmail,
+    )
+  ) {
+    throw new Error(`Duplicate practitioner email: ${email}`)
+  }
+}
+
+function assertAssignedPractitioner(
+  data: AppData,
+  context: TenantContext,
+  practitionerId?: string,
+): void {
+  if (
+    practitionerId &&
+    !data.practitioners.some(
+      (practitioner) =>
+        practitioner.id === practitionerId &&
+        practitioner.organizationId === context.organizationId &&
+        practitioner.clinicId === context.clinicId,
+    )
+  ) {
+    throw new Error('Assigned practitioner must belong to the selected clinic')
+  }
 }
 
 export function upsertPractitioner(
@@ -49,6 +79,7 @@ export function upsertPractitioner(
   },
 ): AppData {
   const next = clone(data)
+  assertUniquePractitionerEmail(next, context.organizationId, input.email, input.id)
 
   if (input.id) {
     const index = next.practitioners.findIndex((p) => p.id === input.id)
@@ -71,7 +102,9 @@ export function upsertPractitioner(
       qualifications: input.qualifications?.map((item) => item.trim()).filter(Boolean),
       languages: input.languages?.map((item) => item.trim()).filter(Boolean),
       availability: input.availability,
-      availabilitySummary: resolveAvailabilitySummary(input),
+      availabilitySummary: input.availability
+        ? undefined
+        : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
     }
   } else {
@@ -88,7 +121,9 @@ export function upsertPractitioner(
       qualifications: input.qualifications?.map((item) => item.trim()).filter(Boolean),
       languages: input.languages?.map((item) => item.trim()).filter(Boolean),
       availability: input.availability,
-      availabilitySummary: resolveAvailabilitySummary(input),
+      availabilitySummary: input.availability
+        ? undefined
+        : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
     })
   }
@@ -148,7 +183,10 @@ export function importPractitioners(
       professionalSummary: input.professionalSummary?.trim() || undefined,
       qualifications: input.qualifications?.map((item) => item.trim()).filter(Boolean),
       languages: input.languages?.map((item) => item.trim()).filter(Boolean),
-      availabilitySummary: input.availabilitySummary?.trim() || undefined,
+      availability: input.availability,
+      availabilitySummary: input.availability
+        ? undefined
+        : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
     })
   }
@@ -164,6 +202,7 @@ export function upsertPatient(
   },
 ): AppData {
   const next = clone(data)
+  assertAssignedPractitioner(next, context, input.assignedPractitionerId)
 
   if (input.id) {
     const index = next.patients.findIndex((p) => p.id === input.id)
@@ -274,6 +313,16 @@ export function updateClinicRouting(
     )
   ) {
     throw new Error('Clinic route is already assigned')
+  }
+  if (
+    next.clinics.some(
+      (clinic) =>
+        clinic.id !== context.clinicId &&
+        clinic.organizationId === context.organizationId &&
+        clinic.slug.toLowerCase() === slug,
+    )
+  ) {
+    throw new Error('Clinic slug is already assigned')
   }
 
   next.clinics[clinicIndex] = {
