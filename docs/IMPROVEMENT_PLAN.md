@@ -54,6 +54,19 @@ validated before starting the next one.
 13. **Phase 3D: optimize delivery.** Add SEO prerendering after the public tree is decoupled
        and the public routes have stable data contracts.
 
+## Current checkpoint — 2026-09-29
+
+- Completed and committed Phase 0, Phase 1, and the first three Phase 2 workflow items:
+      save-status feedback, reset confirmation, and native availability dialog.
+- Last commit: `205f72b` (`refactor: use native availability dialog`). The worktree is clean.
+- Last validation: `npm run typecheck`, `npm run lint`, and `npm run test` passed; 45 tests ran.
+- Resume at the next unchecked Phase 2 item: convert standalone form group labels to
+      semantic `<fieldset>` and `<legend>` elements, starting with Specialties, Public availability,
+      and Policy profiles.
+- Remaining Phase 2 work after that: patient edit/deactivate/search, responsive admin tables,
+      public header/admin link cleanup, public metadata and anchor behavior, clinic contact/profile
+      fields, then the CSS split.
+
 ## How to work this plan
 
 - Work phases in order. Do not start Phase 3 features on top of the current persistence
@@ -139,7 +152,7 @@ validated before starting the next one.
       in `upsertPractitioner`. `assignedPractitionerId` is never checked against the clinic.
       `clinic.slug` is stored, uniqueness unchecked, and routing never reads it. Add
       `validatePractitioner` and `validatePatient` used by every path; drop `slug` or use it.
-- [ ] **Stop persisting derived data.** `availabilitySummary` is stored next to
+- [x] **Stop persisting derived data.** `availabilitySummary` is stored next to
       `availability`. Derive at read time; keep the string only as legacy free-text input.
 - [x] **Registry lookups.** `allSpecialtyOptions()` sorts on every call and is called inside
       render loops. Export a memoized sorted constant and a `slugToSpecialty` map derived from
