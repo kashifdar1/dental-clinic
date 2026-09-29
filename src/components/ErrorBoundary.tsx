@@ -25,11 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="error-page">
           <div>
             <h1>Something went wrong</h1>
-            <p className="muted" style={{ marginTop: '0.75rem' }}>
+            <p className="muted stack-tight">
               Reload the page. If this keeps happening after a schema change,
               reset the demo data from the dashboard.
             </p>
-            <div className="btn-row" style={{ justifyContent: 'center', marginTop: '1.25rem' }}>
+            <div className="btn-row center-actions stack-section">
               <button className="btn" type="button" onClick={() => window.location.reload()}>
                 Reload
               </button>

@@ -5,10 +5,10 @@ export function NotFoundPage() {
     <div className="not-found">
       <div>
         <h1>Page not found</h1>
-        <p className="muted" style={{ marginTop: '0.75rem' }}>
+        <p className="muted stack-tight">
           That route is outside this clinic workspace.
         </p>
-        <div className="btn-row" style={{ justifyContent: 'center', marginTop: '1.25rem' }}>
+        <div className="btn-row center-actions stack-section">
           <Link className="btn" to="/">
             Back to clinic website
           </Link>

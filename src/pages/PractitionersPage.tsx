@@ -355,7 +355,7 @@ export function PractitionersPage() {
           )}
         </div>
       </div>
-      <div style={{ marginTop: '1rem' }}>
+      <div className="stack-section-sm">
         <PractitionerImportPanel />
       </div>
 

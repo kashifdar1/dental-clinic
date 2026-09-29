@@ -149,7 +149,7 @@ export function OrganizationSettingsPage() {
       <form className="grid" onSubmit={submit}>
         <section className="panel">
           <h2>Public website hosting</h2>
-          <p className="muted" style={{ margin: '0.35rem 0 1rem' }}>
+          <p className="muted settings-help">
             A standalone clinic uses its domain root. Multi-clinic
             organizations use city and branch routes under one domain.
           </p>
@@ -300,7 +300,7 @@ export function OrganizationSettingsPage() {
 
         <section className="panel">
           <h2>Regional configuration</h2>
-          <p className="muted" style={{ margin: '0.35rem 0 1rem' }}>
+          <p className="muted settings-help">
             Uses standard ISO, BCP 47, and IANA values so another market can be
             enabled without a code change.
           </p>
@@ -376,7 +376,7 @@ export function OrganizationSettingsPage() {
 
         <section className="panel">
           <h2>Governance configuration</h2>
-          <p className="muted" style={{ margin: '0.35rem 0 1rem' }}>
+          <p className="muted settings-help">
             These values describe required controls. They do not certify legal
             compliance; production services must enforce and audit them.
           </p>

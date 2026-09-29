@@ -64,7 +64,7 @@ export function SpecialtyModulePage() {
         <div className="panel">
           <div className="muted">Practitioners in module</div>
           <div className="stat-value">{modulePractitioners.length}</div>
-          <div className="chip-row" style={{ marginTop: '0.85rem' }}>
+          <div className="chip-row stack-tight-lg">
             {modulePractitioners.map((practitioner) => (
               <span key={practitioner.id} className="chip">
                 {practitioner.fullName}
@@ -78,8 +78,8 @@ export function SpecialtyModulePage() {
         </div>
       </div>
 
-      <section className="panel" style={{ marginTop: '1rem' }}>
-        <h2 style={{ marginBottom: '0.85rem' }}>Patient queue</h2>
+      <section className="panel stack-section-sm">
+        <h2 className="stack-tight-lg">Patient queue</h2>
         {relatedPatients.length === 0 ? (
           <div className="empty">
             No patients assigned to {module.label} practitioners yet.

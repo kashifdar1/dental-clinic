@@ -72,6 +72,38 @@ p {
   margin: 0;
 }
 
+.sidebar-hint {
+  padding: 0.35rem 0.85rem;
+}
+
+.stack-tight {
+  margin-top: 0.75rem;
+}
+
+.stack-tight-lg {
+  margin-top: 0.85rem;
+}
+
+.stack-section-sm {
+  margin-top: 1rem;
+}
+
+.stack-section {
+  margin-top: 1.25rem;
+}
+
+.settings-help {
+  margin: 0.35rem 0 1rem;
+}
+
+.center-actions {
+  justify-content: center;
+}
+
+.no-margin-bottom {
+  margin-bottom: 0;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 260px 1fr;

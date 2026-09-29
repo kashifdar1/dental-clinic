@@ -64,8 +64,8 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <section className="panel" style={{ marginTop: '1.25rem' }}>
-        <div className="page-header" style={{ marginBottom: 0 }}>
+      <section className="panel stack-section">
+        <div className="page-header no-margin-bottom">
           <div>
             <h2>Governance posture</h2>
             <p>
@@ -81,7 +81,7 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <section style={{ marginTop: '1.25rem' }}>
+      <section className="stack-section">
         <div className="page-header">
           <div>
             <h2>Specialty modules</h2>

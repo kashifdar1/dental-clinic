@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="nav-section-label">Active modules</div>
           {activeModules.length === 0 ? (
-            <p className="muted" style={{ padding: '0.35rem 0.85rem' }}>
+            <p className="muted sidebar-hint">
               Add a practitioner specialty to unlock modules.
             </p>
           ) : (
