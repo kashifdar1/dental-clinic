@@ -159,7 +159,7 @@ validated before starting the next one.
 - [x] Toast or status banner component for save confirmations (reuse `.import-message` style).
       Forms currently reset silently.
 - [x] Confirm dialog before **Reset demo data**.
-- [ ] Replace the hand-rolled modal in `AvailabilityDialog` with native `<dialog>` and
+- [x] Replace the hand-rolled modal in `AvailabilityDialog` with native `<dialog>` and
       `showModal()` for focus trap and focus restore. Keep the existing `.modal` styles.
 - [ ] Group labels ("Specialties", "Public availability", "Policy profiles") become
       `<fieldset><legend>`; a `<label>` with no control is an accessibility error.

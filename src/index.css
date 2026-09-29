@@ -383,10 +383,18 @@ th {
   display: grid;
   gap: 1.1rem;
   width: min(520px, 100%);
+  max-height: calc(100vh - 2rem);
+  margin: auto;
+  border: 0;
   padding: 1.35rem;
   border-radius: var(--radius);
   background: var(--panel-solid);
   box-shadow: 0 24px 60px rgba(28, 26, 22, 0.25);
+}
+
+.modal::backdrop {
+  background: rgba(28, 26, 22, 0.45);
+  backdrop-filter: blur(3px);
 }
 
 .modal-header {

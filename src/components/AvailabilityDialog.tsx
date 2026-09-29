@@ -21,20 +21,26 @@ const HOUR_OPTIONS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
   const titleId = useId()
-  const dialogRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const [draft, setDraft] = useState<AvailabilityWindow>(
     value ?? DEFAULT_AVAILABILITY,
   )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onCancel()
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal()
+    } else {
+      dialog.setAttribute('open', '')
     }
-    document.addEventListener('keydown', onKeyDown)
     dialogRef.current?.querySelector<HTMLElement>('button, select')?.focus()
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onCancel])
+    return () => {
+      if (dialog.open && typeof dialog.close === 'function') dialog.close()
+    }
+  }, [])
 
   function toggleDay(day: number) {
     setError(null)
@@ -71,30 +77,29 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
   const preview = formatAvailability(draft)
 
   return (
-    <div
-      className="modal-backdrop"
+    <dialog
+      className="modal"
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onCancel={(event) => {
+        event.preventDefault()
+        onCancel()
+      }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onCancel()
       }}
     >
-      <div
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        ref={dialogRef}
-      >
-        <div className="modal-header">
-          <h2 id={titleId}>Public availability</h2>
-          <button
-            className="btn ghost"
-            type="button"
-            onClick={onCancel}
-            aria-label="Close availability picker"
-          >
-            ✕
-          </button>
-        </div>
+      <div className="modal-header">
+        <h2 id={titleId}>Public availability</h2>
+        <button
+          className="btn ghost"
+          type="button"
+          onClick={onCancel}
+          aria-label="Close availability picker"
+        >
+          ✕
+        </button>
+      </div>
 
         <div className="field">
           <label id={`${titleId}-days`}>Days of the week</label>
@@ -220,7 +225,6 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+    </dialog>
   )
 }
