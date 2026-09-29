@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
+import { usePageMetadata } from '../components/PageMetadata'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
 import { formatAvailability } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
@@ -27,6 +28,15 @@ export function PublicDoctorPage() {
       item.organizationId === organization?.id &&
       item.clinicId === clinic?.id &&
       item.active,
+  )
+
+  usePageMetadata(
+    doctor && organization
+      ? `${doctor.fullName} | ${organization.name}`
+      : 'Doctor profile | Clinic Hub',
+    doctor && clinic
+      ? `${doctor.fullName} at ${clinic.name}. View specialties, availability, and clinic contact details.`
+      : 'View doctor profile and clinic contact details with Clinic Hub.',
   )
 
   if (!organization || !clinic || !doctor)

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
+import { usePageMetadata } from '../components/PageMetadata'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
@@ -50,6 +51,13 @@ export function PublicDirectoryPage() {
         (!resolvedClinic || doctor.clinicId === resolvedClinic.id) &&
         doctor.specialties.includes(specialty.id),
     ),
+  )
+
+  usePageMetadata(
+    organization ? `${organization.name} | Find a doctor` : 'Clinic Hub',
+    organization
+      ? `Find doctors and specialties at ${organization.name}.`
+      : 'Find doctors and specialty care with Clinic Hub.',
   )
 
   if (!organization) return <Navigate to="/not-found" replace />

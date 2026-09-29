@@ -180,7 +180,7 @@ validated before starting the next one.
 - [x] Admin tables collapse to card rows under 620px.
 - [x] Remove the **Admin portal** button from the public header. Link to `/admin` from the
       README and the not-found page instead.
-- [ ] Public pages set `document.title` and a meta description per page.
+- [x] Public pages set `document.title` and a meta description per page.
 - [ ] Anchor links in `PublicHeader` use plain `<a href="#doctors">` or a scroll effect;
       router `Link` does not scroll to hashes on same-page navigation.
 - [ ] Clinic model gains `address`, `phone`, `email`, `hours`, `mapUrl`; the public contact
