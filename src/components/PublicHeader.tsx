@@ -20,8 +20,8 @@ export function PublicHeader({
         </span>
       </Link>
       <nav className="public-nav" aria-label="Public navigation">
-        <Link to={`${homePath}#doctors`}>Our doctors</Link>
-        <Link to={`${homePath}#contact`}>Contact</Link>
+        <a href={`${homePath}#doctors`}>Our doctors</a>
+        <a href={`${homePath}#contact`}>Contact</a>
       </nav>
     </header>
   )

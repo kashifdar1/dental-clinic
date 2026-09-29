@@ -15,7 +15,14 @@ describe('PublicHeader', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('link', { name: 'Our doctors' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Our doctors' })).toHaveAttribute(
+      'href',
+      '/#doctors',
+    )
+    expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute(
+      'href',
+      '/#contact',
+    )
     expect(screen.queryByRole('link', { name: 'Admin portal' })).not.toBeInTheDocument()
   })
 })
