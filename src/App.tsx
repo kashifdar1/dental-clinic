@@ -10,6 +10,23 @@ import { PractitionersPage } from './pages/PractitionersPage'
 import { PublicDirectoryPage } from './pages/PublicDirectoryPage'
 import { PublicDoctorPage } from './pages/PublicDoctorPage'
 import { SpecialtyModulePage } from './pages/SpecialtyModulePage'
+import { PublicTenantProvider } from './public/PublicTenantContext'
+
+function PublicDirectoryRoute() {
+  return (
+    <PublicTenantProvider>
+      <PublicDirectoryPage />
+    </PublicTenantProvider>
+  )
+}
+
+function PublicDoctorRoute() {
+  return (
+    <PublicTenantProvider>
+      <PublicDoctorPage />
+    </PublicTenantProvider>
+  )
+}
 
 export default function App() {
   return (
@@ -19,27 +36,27 @@ export default function App() {
           <Routes>
             <Route
               path="/"
-              element={<PublicDirectoryPage />}
+              element={<PublicDirectoryRoute />}
             />
             <Route
               path="/doctors/:doctorId"
-              element={<PublicDoctorPage />}
+              element={<PublicDoctorRoute />}
             />
             <Route
               path="/:cityCode/:branchCode"
-              element={<PublicDirectoryPage />}
+              element={<PublicDirectoryRoute />}
             />
             <Route
               path="/:cityCode/:branchCode/doctors/:doctorId"
-              element={<PublicDoctorPage />}
+              element={<PublicDoctorRoute />}
             />
             <Route
               path="/clinic/:organizationSlug"
-              element={<PublicDirectoryPage />}
+              element={<PublicDirectoryRoute />}
             />
             <Route
               path="/clinic/:organizationSlug/doctors/:doctorId"
-              element={<PublicDoctorPage />}
+              element={<PublicDoctorRoute />}
             />
             <Route
               path="/admin"

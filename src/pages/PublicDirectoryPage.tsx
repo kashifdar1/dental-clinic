@@ -1,30 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
-import {
-  buildPublicDemoPath,
-  resolvePublicTenant,
-} from '../domain/publicTenantResolver'
+import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
-import { useTenant } from '../domain/TenantContext'
+import { usePublicTenant } from '../public/PublicTenantContext'
 import type { SpecialtyId } from '../domain/types'
 
 export function PublicDirectoryPage() {
-  const { organizationSlug, cityCode, branchCode } = useParams()
-  const location = useLocation()
-  const { data, organization: selectedOrganization } = useTenant()
-  const hostOverride = new URLSearchParams(location.search).get('host')
-  const tenant = resolvePublicTenant(data, {
-    hostname: window.location.hostname,
-    hostOverride,
-    organizationSlug,
-    cityCode,
-    branchCode,
-    fallbackOrganizationId: selectedOrganization.id,
-  })
-  const organization = tenant?.organization
-  const resolvedClinic = tenant?.clinic
+  const { data, organization, clinic: resolvedClinic } = usePublicTenant()
   const [clinicId, setClinicId] = useState('all')
   const [specialtyId, setSpecialtyId] = useState<'all' | SpecialtyId>('all')
 

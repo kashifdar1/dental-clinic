@@ -1,27 +1,14 @@
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
 import { formatAvailability } from '../domain/availability'
-import {
-  buildPublicDemoPath,
-  resolvePublicTenant,
-} from '../domain/publicTenantResolver'
+import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
-import { useTenant } from '../domain/TenantContext'
+import { usePublicTenant } from '../public/PublicTenantContext'
 
 export function PublicDoctorPage() {
-  const { organizationSlug, cityCode, branchCode, doctorId } = useParams()
-  const location = useLocation()
-  const { data, organization: selectedOrganization } = useTenant()
-  const tenant = resolvePublicTenant(data, {
-    hostname: window.location.hostname,
-    hostOverride: new URLSearchParams(location.search).get('host'),
-    organizationSlug,
-    cityCode,
-    branchCode,
-    fallbackOrganizationId: selectedOrganization.id,
-  })
-  const organization = tenant?.organization
+  const { organizationSlug, doctorId } = useParams()
+  const { data, organization, clinic: resolvedClinic } = usePublicTenant()
   const candidateDoctor = data.practitioners.find(
     (item) =>
       item.id === doctorId &&
@@ -29,7 +16,7 @@ export function PublicDoctorPage() {
       item.active,
   )
   const clinic =
-    tenant?.clinic ??
+    resolvedClinic ??
     (organizationSlug && candidateDoctor
       ? data.clinics.find((item) => item.id === candidateDoctor.clinicId)
       : undefined)

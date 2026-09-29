@@ -127,7 +127,7 @@ validated before starting the next one.
       `AppData`; the only migration strategy is bumping `VITE_STORAGE_KEY`, which wipes data.
       Add `schemaVersion` to `AppData`, a `migrate(raw): AppData` chain, and a runtime check
       (zod is acceptable here; it is the one dependency this plan allows).
-- [ ] **Decouple the public site from the admin session.** `PublicDirectoryPage` and
+- [x] **Decouple the public site from the admin session.** `PublicDirectoryPage` and
       `PublicDoctorPage` call `useTenant()` and fall back to the admin's selected organization.
       Add a `PublicTenantProvider` under `src/public/` that resolves from host and route params
       only (dev fallback allowed behind the same flag as the host override). Public pages must
