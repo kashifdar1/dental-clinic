@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { SaveStatus } from '../components/SaveStatus'
+import type { MutationResult } from '../domain/TenantContext'
 import { POLICY_PROFILES } from '../domain/policyRegistry'
 import { useTenant } from '../domain/TenantContext'
 
@@ -6,6 +8,7 @@ export function OrganizationSettingsPage() {
   const {
     organization,
     clinic,
+    status,
     saveOrganizationSettings,
     saveClinicRouting,
   } = useTenant()
@@ -19,8 +22,7 @@ export function OrganizationSettingsPage() {
   const [governance, setGovernance] = useState(
     organization.governanceSettings,
   )
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
+  const [result, setResult] = useState<MutationResult | null>(null)
 
   const hostingMode = organization.hostingSettings.mode
   const primaryDomain = organization.hostingSettings.primaryDomain
@@ -61,7 +63,7 @@ export function OrganizationSettingsPage() {
       auditTrailRequired,
       consentTrackingRequired,
     })
-    setSaved(false)
+    setResult(null)
   }, [
     auditTrailRequired,
     branchCode,
@@ -94,22 +96,22 @@ export function OrganizationSettingsPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    setError('')
+    setResult(null)
     const organizationResult = await saveOrganizationSettings({
       hostingSettings: hosting,
       regionalSettings: regional,
       governanceSettings: governance,
     })
     if (!organizationResult.ok) {
-      setError(organizationResult.message)
+      setResult(organizationResult)
       return
     }
     const clinicResult = await saveClinicRouting(clinicRouting)
     if (!clinicResult.ok) {
-      setError(clinicResult.message)
+      setResult(clinicResult)
       return
     }
-    setSaved(true)
+    setResult({ ok: true })
   }
 
   return (
@@ -403,13 +405,8 @@ export function OrganizationSettingsPage() {
           <button className="btn" type="submit">
             Save organization settings
           </button>
-          {saved ? <span className="chip">Saved</span> : null}
         </div>
-        {error ? (
-          <div className="form-error" role="alert">
-            {error}
-          </div>
-        ) : null}
+        <SaveStatus status={status} result={result} />
       </form>
     </div>
   )

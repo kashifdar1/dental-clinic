@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { SaveStatus } from '../components/SaveStatus'
 import { formatDate } from '../domain/regionalFormatting'
-import { useTenant } from '../domain/TenantContext'
+import { useTenant, type MutationResult } from '../domain/TenantContext'
 
 const emptyForm = {
   fullName: '',
@@ -11,18 +12,21 @@ const emptyForm = {
 }
 
 export function PatientsPage() {
-  const { clinic, organization, patients, practitioners, savePatient } = useTenant()
+  const { clinic, organization, patients, practitioners, savePatient, status } = useTenant()
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [result, setResult] = useState<MutationResult | null>(null)
 
   useEffect(() => {
     setForm(emptyForm)
     setError('')
+    setResult(null)
   }, [clinic.id])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
+    setResult(null)
     if (!form.fullName.trim()) {
       setError('Full name is required.')
       return
@@ -35,10 +39,11 @@ export function PatientsPage() {
       notes: form.notes || undefined,
     })
     if (!result.ok) {
-      setError(result.message)
+      setResult(result)
       return
     }
     setForm(emptyForm)
+    setResult(result)
   }
 
   return (
@@ -118,6 +123,7 @@ export function PatientsPage() {
               {error}
             </div>
           ) : null}
+          <SaveStatus status={status} result={result} />
         </form>
 
         <div className="panel table-wrap">

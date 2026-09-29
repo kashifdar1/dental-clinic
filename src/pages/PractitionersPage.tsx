@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AvailabilityDialog } from '../components/AvailabilityDialog'
 import { PractitionerImportPanel } from '../components/PractitionerImportPanel'
+import { SaveStatus } from '../components/SaveStatus'
 import { formatAvailability } from '../domain/availability'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
-import { useTenant } from '../domain/TenantContext'
+import { useTenant, type MutationResult } from '../domain/TenantContext'
 import type {
   AvailabilityWindow,
   Practitioner,
@@ -24,11 +25,12 @@ const emptyForm = {
 }
 
 export function PractitionersPage() {
-  const { clinic, practitioners, savePractitioner, activeModules } = useTenant()
+  const { clinic, practitioners, savePractitioner, activeModules, status } = useTenant()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [error, setError] = useState('')
+  const [result, setResult] = useState<MutationResult | null>(null)
   const options = useMemo(() => allSpecialtyOptions(), [])
 
   useEffect(() => {
@@ -36,16 +38,19 @@ export function PractitionersPage() {
     setForm(emptyForm)
     setAvailabilityOpen(false)
     setError('')
+    setResult(null)
   }, [clinic.id])
 
   function startCreate() {
     setEditingId(null)
     setForm(emptyForm)
     setError('')
+    setResult(null)
   }
 
   function startEdit(practitioner: Practitioner) {
     setEditingId(practitioner.id)
+    setResult(null)
     setForm({
       fullName: practitioner.fullName,
       email: practitioner.email,
@@ -75,6 +80,7 @@ export function PractitionersPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
+    setResult(null)
     if (!form.fullName.trim()) {
       setError('Full name is required.')
       return
@@ -103,10 +109,11 @@ export function PractitionersPage() {
       acceptingPatients: form.acceptingPatients,
     })
     if (!result.ok) {
-      setError(result.message)
+      setResult(result)
       return
     }
     startCreate()
+    setResult(result)
   }
 
   async function setActive(practitioner: Practitioner, active: boolean) {
@@ -125,10 +132,11 @@ export function PractitionersPage() {
       acceptingPatients: practitioner.acceptingPatients,
     })
     if (!result.ok) {
-      setError(result.message)
+      setResult(result)
       return
     }
     if (editingId === practitioner.id) startCreate()
+    setResult(result)
   }
 
   return (
@@ -280,6 +288,7 @@ export function PractitionersPage() {
               {error}
             </div>
           ) : null}
+          <SaveStatus status={status} result={result} />
         </form>
 
         <div className="panel table-wrap">
