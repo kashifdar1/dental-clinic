@@ -166,7 +166,7 @@ validated before starting the next one.
 
 ## Phase 2: UI consistency (keep the look)
 
-- [ ] Split `src/index.css` into `tokens.css`, `base.css`, `forms.css`, `admin.css`,
+- [x] Split `src/index.css` into `tokens.css`, `base.css`, `forms.css`, `admin.css`,
       `public.css`. Add `.stack-*` spacing utilities and remove inline `style={{ margin }}`
       from pages. No visual change intended; compare screenshots before and after.
 - [x] Toast or status banner component for save confirmations (reuse `.import-message` style).
