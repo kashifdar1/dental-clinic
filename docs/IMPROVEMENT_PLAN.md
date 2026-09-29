@@ -71,7 +71,7 @@ validated before starting the next one.
 
 ## Phase 0: fix now, on the current branch
 
-- [ ] **Uncaught repository errors crash the app.** Saving a duplicate primary domain or a
+- [x] **Uncaught repository errors crash the app.** Saving a duplicate primary domain or a
       duplicate clinic route throws inside a `setData` updater and lands on the error boundary.
       Files: `src/domain/TenantContext.tsx` (mutation callbacks),
       `src/pages/OrganizationSettingsPage.tsx` `submit`.
@@ -79,35 +79,35 @@ validated before starting the next one.
       pages render the message in a `.form-error` line. Apply the same to practitioner and
       patient saves. Test: settings page, set domain to `lassanipolyclinic.com`, submit, expect
       inline error and no throw.
-- [ ] **"Saved" chip never shows.** The resync effect in `OrganizationSettingsPage` depends on
+- [x] **"Saved" chip never shows.** The resync effect in `OrganizationSettingsPage` depends on
       the `organization` and `clinic` object identities, which change after every save, so it
       resets `saved` to false immediately. Fix: depend on `organization.id` and `clinic.id`,
       or move the confirmation to a toast (see Phase 2). Test: submit, expect chip visible.
-- [ ] **Practitioner form drops submit silently when no specialty is checked.**
+- [x] **Practitioner form drops submit silently when no specialty is checked.**
       `src/pages/PractitionersPage.tsx` `onSubmit` returns early with no message. Fix: inline
       error with `role="alert"`, or disable submit and show a hint. Test: fill name, email and
       phone, submit, expect alert and no new row.
-- [ ] **Date of birth can render one day early.** `src/domain/regionalFormatting.ts`
+- [x] **Date of birth can render one day early.** `src/domain/regionalFormatting.ts`
       `formatDate` builds a local-midnight `Date` and formats it in the organization timezone.
       Verified: browser `Asia/Karachi` plus org `America/Los_Angeles` shows `Apr 11` for
       `1991-04-12`. Fix: DOB is a calendar date. Parse `${value}T00:00:00Z` and format with
       `timeZone: 'UTC'`. Test by asserting the UTC path.
-- [ ] **`?host=` override is honored in production.** `src/domain/publicTenantResolver.ts`
+- [x] **`?host=` override is honored in production.** `src/domain/publicTenantResolver.ts`
       `resolvePublicTenant` uses `hostOverride` unconditionally, so any visitor can render
       another tenant's site under your domain. Fix: honor the override only when
       `isLocalHostname(hostname)` is true or `VITE_ALLOW_HOST_OVERRIDE=true`. Update
       `buildPublicDemoPath` to match. Add the flag to `.env.example`. Test both branches.
-- [ ] **Stale edit form after clinic switch.** Editing a doctor, then switching clinic in the
+- [x] **Stale edit form after clinic switch.** Editing a doctor, then switching clinic in the
       top bar, keeps the form; saving throws a tenant violation. Fix: render
       `<PractitionersPage key={clinic.id} />` from the route (or reset in an effect on
       `clinic.id`). Same for the patients page.
-- [ ] **Uppercase checkbox labels on the Practitioners form.** The Active and Accepting
+- [x] **Uppercase checkbox labels on the Practitioners form.** The Active and Accepting
       checkboxes sit in a `.field` without `.checklist`, so `.field label` styles apply.
       Fix: wrap them in `<div className="field full checklist">` as the settings page does.
-- [ ] **Dead SVG fallback in `SpecialtyThumbnail`.** Every specialty has a PNG path, so the
+- [x] **Dead SVG fallback in `SpecialtyThumbnail`.** Every specialty has a PNG path, so the
       `if (thumbnailPath)` branch always wins. Fix: delete the SVG fallback and palette, or
       make `THUMBNAIL_PATHS` a `Partial<Record<...>>` so new specialties use the fallback.
-- [ ] Add `src/pages/*.test.tsx` covering the first three items (render inside
+- [x] Add `src/pages/*.test.tsx` covering the first three items (render inside
       `MemoryRouter` and `TenantProvider`, `localStorage.clear()` in `beforeEach`).
 
 ## Phase 1: architecture, next PR, before any new feature

@@ -12,7 +12,7 @@ const PALETTES: Record<
   cardiology: { start: '#eaddec', end: '#b594bf', ink: '#60386e' },
 }
 
-const THUMBNAIL_PATHS: Record<SpecialtyId, string> = {
+const THUMBNAIL_PATHS: Partial<Record<SpecialtyId, string>> = {
   general_medicine: '/specialties/general-medicine.png',
   gynecology: '/specialties/gynecology.png',
   dentistry: '/specialties/dentistry.png',

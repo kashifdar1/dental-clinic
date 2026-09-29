@@ -148,7 +148,7 @@ export function PractitionersPage() {
           <div className="full">
             <h2>{editingId ? 'Edit practitioner' : 'Add practitioner'}</h2>
           </div>
-          <div className="field full">
+          <div className="field full checklist">
             <label htmlFor="fullName">Full name</label>
             <input
               id="fullName"

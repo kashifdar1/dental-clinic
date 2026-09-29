@@ -33,12 +33,21 @@ export function isLocalHostname(hostname: string): boolean {
   )
 }
 
+function canOverrideHost(hostname: string): boolean {
+  return (
+    isLocalHostname(hostname) ||
+    import.meta.env.VITE_ALLOW_HOST_OVERRIDE === 'true'
+  )
+}
+
 export function resolvePublicTenant(
   data: Pick<AppData, 'organizations' | 'clinics'>,
   request: PublicTenantRequest,
 ): ResolvedPublicTenant | null {
   const requestedHost = normalizeHostname(
-    request.hostOverride || request.hostname,
+    canOverrideHost(request.hostname) && request.hostOverride
+      ? request.hostOverride
+      : request.hostname,
   )
   let organization = data.organizations.find(
     (item) =>
@@ -112,6 +121,8 @@ export function buildPublicDemoPath(
   ) {
     return path
   }
+
+  if (!canOverrideHost(hostname)) return path
 
   const separator = path.includes('?') ? '&' : '?'
   return `${path}${separator}host=${encodeURIComponent(

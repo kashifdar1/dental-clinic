@@ -56,6 +56,24 @@ describe('public tenant resolver', () => {
     ).toBeNull()
   })
 
+  it('ignores host overrides on production hostnames', () => {
+    const tenant = resolvePublicTenant(DEMO_DATA, {
+      hostname: 'indushospital.com',
+      hostOverride: 'lassanipolyclinic.com',
+    })
+
+    expect(tenant?.organization.id).toBe('org_aurora')
+  })
+
+  it('allows host overrides on local hostnames', () => {
+    const tenant = resolvePublicTenant(DEMO_DATA, {
+      hostname: '127.0.0.1',
+      hostOverride: 'lassanipolyclinic.com',
+    })
+
+    expect(tenant?.organization.id).toBe('org_harbor')
+  })
+
   it('builds standalone and multi-clinic public paths', () => {
     const indus = DEMO_DATA.organizations[0]
     const indusLahore = DEMO_DATA.clinics[1]
@@ -78,5 +96,8 @@ describe('public tenant resolver', () => {
         'doctor-1',
       ),
     ).toBe('/lhr/01/doctors/doctor-1?host=indushospital.com')
+    expect(buildPublicDemoPath(indus, indusLahore, 'indushospital.com')).toBe(
+      '/lhr/01',
+    )
   })
 })
