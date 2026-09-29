@@ -1,6 +1,7 @@
 import type { AppData } from './types'
 
 export const DEMO_DATA: AppData = {
+  schemaVersion: 1,
   organizations: [
     {
       id: 'org_aurora',

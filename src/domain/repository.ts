@@ -8,6 +8,7 @@ import type {
   TenantContext,
 } from './types'
 import { modulesForSpecialties } from './specialtyRegistry'
+import { migrate } from './schema'
 export {
   importPractitioners,
   setTenantContext,
@@ -28,7 +29,7 @@ function readRaw(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return clone(DEMO_DATA)
-    return JSON.parse(raw) as AppData
+    return migrate(JSON.parse(raw))
   } catch {
     return clone(DEMO_DATA)
   }
@@ -49,7 +50,7 @@ export function resetDemoData(): AppData {
 }
 
 export function saveAppData(data: AppData): void {
-  writeRaw(data)
+  writeRaw(migrate(data))
 }
 
 export function getClinicsForOrg(

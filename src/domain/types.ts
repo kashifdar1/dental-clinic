@@ -107,6 +107,7 @@ export interface TenantContext {
 }
 
 export interface AppData {
+  schemaVersion: number
   organizations: Organization[]
   clinics: Clinic[]
   practitioners: Practitioner[]

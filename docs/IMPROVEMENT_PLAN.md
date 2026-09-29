@@ -123,7 +123,7 @@ validated before starting the next one.
       - `TenantProvider` applies reducers, then persists through the store in one place, and
         exposes `status: 'idle' | 'saving' | 'error'` plus `error`.
       Keep the existing repository tests green by re-exporting from the new modules.
-- [ ] **Schema version and validation on read.** `readRaw` casts `JSON.parse` output to
+- [x] **Schema version and validation on read.** `readRaw` casts `JSON.parse` output to
       `AppData`; the only migration strategy is bumping `VITE_STORAGE_KEY`, which wipes data.
       Add `schemaVersion` to `AppData`, a `migrate(raw): AppData` chain, and a runtime check
       (zod is acceptable here; it is the one dependency this plan allows).
