@@ -223,24 +223,24 @@ export function PatientsPage() {
                   )
                   return (
                     <tr key={patient.id}>
-                      <td>
+                      <td data-label="Patient">
                         <strong>{patient.fullName}</strong>
                         <div className="muted">{patient.phone}</div>
                       </td>
-                      <td>
+                      <td data-label="DOB">
                         {formatDate(
                           patient.dateOfBirth,
                           organization.regionalSettings,
                         )}
                       </td>
-                      <td>{assigned?.fullName ?? 'Unassigned'}</td>
-                      <td className="muted">{patient.notes ?? '—'}</td>
-                      <td>
+                      <td data-label="Assigned">{assigned?.fullName ?? 'Unassigned'}</td>
+                      <td data-label="Notes" className="muted">{patient.notes ?? '—'}</td>
+                      <td data-label="Status">
                         <span className={`chip${patient.active === false ? ' inactive' : ''}`}>
                           {patient.active === false ? 'Inactive' : 'Active'}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Actions">
                         <div className="btn-row">
                           <button
                             className="btn ghost"

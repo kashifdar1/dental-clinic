@@ -307,11 +307,11 @@ export function PractitionersPage() {
               <tbody>
                 {practitioners.map((practitioner) => (
                   <tr key={practitioner.id}>
-                    <td>
+                    <td data-label="Doctor">
                       <strong>{practitioner.fullName}</strong>
                       <div className="muted">{practitioner.email}</div>
                     </td>
-                    <td>
+                    <td data-label="Specialties">
                       <div className="chip-row">
                         {practitioner.specialties.map((id) => {
                           const module = options.find((item) => item.id === id)
@@ -323,12 +323,12 @@ export function PractitionersPage() {
                         })}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <span className={`chip${practitioner.active ? '' : ' inactive'}`}>
                         {practitioner.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <div className="btn-row">
                         <button
                           className="btn ghost"

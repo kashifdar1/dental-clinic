@@ -177,7 +177,7 @@ validated before starting the next one.
 - [x] Group labels ("Specialties", "Public availability", "Policy profiles") become
       `<fieldset><legend>`; a `<label>` with no control is an accessibility error.
 - [x] Patients page: edit, deactivate, search. `upsertPatient` already supports `id`.
-- [ ] Admin tables collapse to card rows under 620px.
+- [x] Admin tables collapse to card rows under 620px.
 - [ ] Remove the **Admin portal** button from the public header. Link to `/admin` from the
       README and the not-found page instead.
 - [ ] Public pages set `document.title` and a meta description per page.
