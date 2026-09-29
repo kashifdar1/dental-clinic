@@ -15,6 +15,12 @@ export function DashboardPage() {
     organization.governanceSettings.policyProfileIds,
   )
 
+  function confirmReset() {
+    if (window.confirm('Reset all demo data to the original seed data?')) {
+      resetDemo()
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -29,7 +35,7 @@ export function DashboardPage() {
           <Link className="btn" to="/admin/practitioners">
             Manage practitioners
           </Link>
-          <button className="btn secondary" type="button" onClick={resetDemo}>
+          <button className="btn secondary" type="button" onClick={confirmReset}>
             Reset demo data
           </button>
         </div>
