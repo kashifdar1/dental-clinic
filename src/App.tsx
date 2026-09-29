@@ -1,16 +1,28 @@
+import { lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AppShell } from './components/AppShell'
+import { AdminLayout, RequireMembership } from './components/AdminLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { TenantProvider } from './domain/TenantContext'
-import { DashboardPage } from './pages/DashboardPage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage'
-import { PatientsPage } from './pages/PatientsPage'
-import { PractitionersPage } from './pages/PractitionersPage'
 import { PublicDirectoryPage } from './pages/PublicDirectoryPage'
 import { PublicDoctorPage } from './pages/PublicDoctorPage'
-import { SpecialtyModulePage } from './pages/SpecialtyModulePage'
 import { PublicTenantProvider } from './public/PublicTenantContext'
+
+const DashboardPage = lazy(async () => ({
+  default: (await import('./pages/DashboardPage')).DashboardPage,
+}))
+const OrganizationSettingsPage = lazy(async () => ({
+  default: (await import('./pages/OrganizationSettingsPage')).OrganizationSettingsPage,
+}))
+const PatientsPage = lazy(async () => ({
+  default: (await import('./pages/PatientsPage')).PatientsPage,
+}))
+const PractitionersPage = lazy(async () => ({
+  default: (await import('./pages/PractitionersPage')).PractitionersPage,
+}))
+const SpecialtyModulePage = lazy(async () => ({
+  default: (await import('./pages/SpecialtyModulePage')).SpecialtyModulePage,
+}))
 
 function PublicDirectoryRoute() {
   return (
@@ -58,46 +70,15 @@ export default function App() {
               path="/clinic/:organizationSlug/doctors/:doctorId"
               element={<PublicDoctorRoute />}
             />
-            <Route
-              path="/admin"
-              element={
-                <AppShell>
-                  <DashboardPage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/admin/practitioners"
-              element={
-                <AppShell>
-                  <PractitionersPage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/admin/patients"
-              element={
-                <AppShell>
-                  <PatientsPage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <AppShell>
-                  <OrganizationSettingsPage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/admin/modules/:moduleSlug"
-              element={
-                <AppShell>
-                  <SpecialtyModulePage />
-                </AppShell>
-              }
-            />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route element={<RequireMembership />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="practitioners" element={<PractitionersPage />} />
+                <Route path="patients" element={<PatientsPage />} />
+                <Route path="settings" element={<OrganizationSettingsPage />} />
+                <Route path="modules/:moduleSlug" element={<SpecialtyModulePage />} />
+              </Route>
+            </Route>
             <Route path="/not-found" element={<NotFoundPage />} />
             <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Routes>

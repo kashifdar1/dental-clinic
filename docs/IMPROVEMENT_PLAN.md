@@ -132,7 +132,7 @@ validated before starting the next one.
       Add a `PublicTenantProvider` under `src/public/` that resolves from host and route params
       only (dev fallback allowed behind the same flag as the host override). Public pages must
       not import `TenantContext`.
-- [ ] **Layout routes.** `src/App.tsx` repeats `<AppShell>` five times. Use
+- [x] **Layout routes.** `src/App.tsx` repeats `<AppShell>` five times. Use
       `<Route element={<AdminLayout />}>` with `<Outlet />`, `React.lazy` the admin tree, and
       add a `RequireMembership` guard element as the future auth seam.
 - [x] **Centralize invariants per entity.** Email uniqueness is enforced in CSV import but not
