@@ -221,6 +221,7 @@ export function upsertPatient(
       phone: input.phone.trim(),
       assignedPractitionerId: input.assignedPractitionerId,
       notes: input.notes?.trim() || undefined,
+      active: input.active ?? true,
     }
   } else {
     next.patients.push({
@@ -232,6 +233,7 @@ export function upsertPatient(
       phone: input.phone.trim(),
       assignedPractitionerId: input.assignedPractitionerId,
       notes: input.notes?.trim() || undefined,
+      active: input.active ?? true,
     })
   }
 

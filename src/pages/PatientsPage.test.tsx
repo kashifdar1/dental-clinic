@@ -43,4 +43,29 @@ describe('PatientsPage', () => {
       expect(screen.getByLabelText('Full name')).toHaveValue(''),
     )
   })
+
+  it('searches, edits, and deactivates patients', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByLabelText('Search patients'), 'Jordan')
+    expect(screen.getByText('Jordan Ellis')).toBeInTheDocument()
+    expect(screen.queryByText('Aisha Rahman')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const name = screen.getByLabelText('Full name')
+    await user.clear(name)
+    await user.type(name, 'Jordan Updated')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(await screen.findByText('Jordan Updated')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Deactivate' }))
+    await waitFor(() =>
+      expect(screen.queryByText('Jordan Updated')).not.toBeInTheDocument(),
+    )
+
+    await user.click(screen.getByRole('checkbox', { name: 'Show inactive' }))
+    expect(await screen.findByText('Jordan Updated')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reactivate' })).toBeInTheDocument()
+  })
 })

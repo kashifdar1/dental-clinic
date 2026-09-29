@@ -176,7 +176,7 @@ validated before starting the next one.
       `showModal()` for focus trap and focus restore. Keep the existing `.modal` styles.
 - [x] Group labels ("Specialties", "Public availability", "Policy profiles") become
       `<fieldset><legend>`; a `<label>` with no control is an accessibility error.
-- [ ] Patients page: edit, deactivate, search. `upsertPatient` already supports `id`.
+- [x] Patients page: edit, deactivate, search. `upsertPatient` already supports `id`.
 - [ ] Admin tables collapse to card rows under 620px.
 - [ ] Remove the **Admin portal** button from the public header. Link to `/admin` from the
       README and the not-found page instead.

@@ -95,6 +95,7 @@ export interface Patient {
   phone: string
   assignedPractitionerId?: string
   notes?: string
+  active?: boolean
 }
 
 export interface Membership {

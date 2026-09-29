@@ -4,16 +4,20 @@ import { formatDate } from '../domain/regionalFormatting'
 import { useTenant, type MutationResult } from '../domain/TenantContext'
 
 const emptyForm = {
+  id: undefined as string | undefined,
   fullName: '',
   dateOfBirth: '',
   phone: '',
   assignedPractitionerId: '',
   notes: '',
+  active: true,
 }
 
 export function PatientsPage() {
   const { clinic, organization, patients, practitioners, savePatient, status } = useTenant()
   const [form, setForm] = useState(emptyForm)
+  const [search, setSearch] = useState('')
+  const [showInactive, setShowInactive] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<MutationResult | null>(null)
 
@@ -32,11 +36,13 @@ export function PatientsPage() {
       return
     }
     const result = await savePatient({
+      id: form.id,
       fullName: form.fullName,
       dateOfBirth: form.dateOfBirth,
       phone: form.phone,
       assignedPractitionerId: form.assignedPractitionerId || undefined,
       notes: form.notes || undefined,
+      active: form.active,
     })
     if (!result.ok) {
       setResult(result)
@@ -45,6 +51,47 @@ export function PatientsPage() {
     setForm(emptyForm)
     setResult(result)
   }
+
+  function startEdit(patient: (typeof patients)[number]) {
+    setForm({
+      id: patient.id,
+      fullName: patient.fullName,
+      dateOfBirth: patient.dateOfBirth,
+      phone: patient.phone,
+      assignedPractitionerId: patient.assignedPractitionerId ?? '',
+      notes: patient.notes ?? '',
+      active: patient.active !== false,
+    })
+    setError('')
+    setResult(null)
+  }
+
+  async function setActive(patient: (typeof patients)[number], active: boolean) {
+    const result = await savePatient({
+      id: patient.id,
+      fullName: patient.fullName,
+      dateOfBirth: patient.dateOfBirth,
+      phone: patient.phone,
+      assignedPractitionerId: patient.assignedPractitionerId,
+      notes: patient.notes,
+      active,
+    })
+    if (!result.ok) {
+      setResult(result)
+      return
+    }
+    if (form.id === patient.id) setForm(emptyForm)
+    setResult(result)
+  }
+
+  const normalizedSearch = search.trim().toLowerCase()
+  const visiblePatients = patients.filter((patient) => {
+    if (!showInactive && patient.active === false) return false
+    if (!normalizedSearch) return true
+    return [patient.fullName, patient.phone, patient.notes ?? ''].some((value) =>
+      value.toLowerCase().includes(normalizedSearch),
+    )
+  })
 
   return (
     <div>
@@ -58,7 +105,7 @@ export function PatientsPage() {
       <div className="admin-split">
         <form className="panel form-grid" onSubmit={onSubmit}>
           <div className="full">
-            <h2>Add patient</h2>
+            <h2>{form.id ? 'Edit patient' : 'Add patient'}</h2>
           </div>
           <div className="field full">
             <label htmlFor="patientName">Full name</label>
@@ -115,8 +162,17 @@ export function PatientsPage() {
           </div>
           <div className="btn-row full">
             <button className="btn" type="submit">
-              Add patient
+              {form.id ? 'Save changes' : 'Add patient'}
             </button>
+            {form.id ? (
+              <button
+                className="btn secondary"
+                type="button"
+                onClick={() => setForm(emptyForm)}
+              >
+                Cancel
+              </button>
+            ) : null}
           </div>
           {error ? (
             <div className="form-error full" role="alert">
@@ -127,7 +183,26 @@ export function PatientsPage() {
         </form>
 
         <div className="panel table-wrap">
-          {patients.length === 0 ? (
+          <div className="patient-filters">
+            <div className="field">
+              <label htmlFor="patient-search">Search patients</label>
+              <input
+                id="patient-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Name, phone, or notes"
+              />
+            </div>
+            <label className="checklist-inline">
+              <input
+                type="checkbox"
+                checked={showInactive}
+                onChange={(event) => setShowInactive(event.target.checked)}
+              />
+              Show inactive
+            </label>
+          </div>
+          {visiblePatients.length === 0 ? (
             <div className="empty">No patients in this clinic yet.</div>
           ) : (
             <table>
@@ -137,10 +212,12 @@ export function PatientsPage() {
                   <th>DOB</th>
                   <th>Assigned</th>
                   <th>Notes</th>
+                  <th>Status</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
-                {patients.map((patient) => {
+                {visiblePatients.map((patient) => {
                   const assigned = practitioners.find(
                     (p) => p.id === patient.assignedPractitionerId,
                   )
@@ -158,6 +235,29 @@ export function PatientsPage() {
                       </td>
                       <td>{assigned?.fullName ?? 'Unassigned'}</td>
                       <td className="muted">{patient.notes ?? '—'}</td>
+                      <td>
+                        <span className={`chip${patient.active === false ? ' inactive' : ''}`}>
+                          {patient.active === false ? 'Inactive' : 'Active'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-row">
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            onClick={() => startEdit(patient)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            onClick={() => setActive(patient, patient.active === false)}
+                          >
+                            {patient.active === false ? 'Reactivate' : 'Deactivate'}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   )
                 })}
