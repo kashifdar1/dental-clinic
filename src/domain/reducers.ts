@@ -294,6 +294,10 @@ export function updateClinicRouting(
     address?: string
     hours?: string
     mapUrl?: string
+    tagline?: string
+    heroCopy?: string
+    heroImageUrl?: string
+    whatsappUrl?: string
   },
 ): AppData {
   const next = clone(data)
@@ -342,6 +346,10 @@ export function updateClinicRouting(
     address: input.address?.trim() || undefined,
     hours: input.hours?.trim() || undefined,
     mapUrl: input.mapUrl?.trim() || undefined,
+    tagline: input.tagline?.trim() || undefined,
+    heroCopy: input.heroCopy?.trim() || undefined,
+    heroImageUrl: input.heroImageUrl?.trim() || undefined,
+    whatsappUrl: input.whatsappUrl?.trim() || undefined,
   }
   return next
 }

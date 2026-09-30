@@ -74,17 +74,26 @@ export function PublicDirectoryPage() {
       <main>
         <section className="public-hero">
           <div className="public-hero-copy">
-            <span className="eyebrow">Trusted, connected care</span>
-            <h1>Find the right doctor for your family.</h1>
+            <span className="eyebrow">
+              {resolvedClinic?.tagline || 'Trusted, connected care'}
+            </span>
+            <h1>{resolvedClinic?.name || organization.name}</h1>
             <p>
-              Meet experienced practitioners across our clinics, explore their
-              specialties, and contact the clinic directly.
+              {resolvedClinic?.heroCopy ||
+                'Meet experienced practitioners across our clinics, explore their specialties, and contact the clinic directly.'}
             </p>
             <a className="btn" href="#doctors">
               Meet our doctors
             </a>
           </div>
           <div className="hero-note">
+            {resolvedClinic?.heroImageUrl ? (
+              <img
+                className="public-hero-image"
+                src={resolvedClinic.heroImageUrl}
+                alt=""
+              />
+            ) : null}
             <span className="hero-note-number">{doctors.length}</span>
             <span>
               active practitioners across {clinics.length}{' '}
@@ -215,6 +224,11 @@ export function PublicDirectoryPage() {
                 {clinic.hours ? <span>{clinic.hours}</span> : null}
                 {clinic.phone ? <a href={`tel:${clinic.phone}`}>{clinic.phone}</a> : null}
                 {clinic.email ? <a href={`mailto:${clinic.email}`}>{clinic.email}</a> : null}
+                {clinic.whatsappUrl ? (
+                  <a href={clinic.whatsappUrl} target="_blank" rel="noreferrer">
+                    WhatsApp
+                  </a>
+                ) : null}
                 {clinic.mapUrl ? (
                   <a href={clinic.mapUrl} target="_blank" rel="noreferrer">
                     Directions

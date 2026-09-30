@@ -77,6 +77,10 @@ interface TenantState {
     address?: string
     hours?: string
     mapUrl?: string
+    tagline?: string
+    heroCopy?: string
+    heroImageUrl?: string
+    whatsappUrl?: string
   }) => Promise<MutationResult>
   resetDemo: () => void
 }

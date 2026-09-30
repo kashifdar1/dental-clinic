@@ -6,14 +6,6 @@ interface SaveStatusProps {
 }
 
 export function SaveStatus({ status, result }: SaveStatusProps) {
-  if (status === 'saving') {
-    return (
-      <div className="import-message save-status" role="status" aria-live="polite">
-        Saving changes...
-      </div>
-    )
-  }
-
   if (result && !result.ok) {
     return (
       <div className="import-message error-chip save-status" role="alert">
@@ -26,6 +18,14 @@ export function SaveStatus({ status, result }: SaveStatusProps) {
     return (
       <div className="import-message save-status" role="status" aria-live="polite">
         Saved
+      </div>
+    )
+  }
+
+  if (status === 'saving') {
+    return (
+      <div className="import-message save-status" role="status" aria-live="polite">
+        Saving changes...
       </div>
     )
   }

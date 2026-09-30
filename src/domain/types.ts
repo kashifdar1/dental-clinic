@@ -54,6 +54,10 @@ export interface Clinic {
   address?: string
   hours?: string
   mapUrl?: string
+  tagline?: string
+  heroCopy?: string
+  heroImageUrl?: string
+  whatsappUrl?: string
 }
 
 /** Day numbers follow `Date.getDay()`: 0 is Sunday through 6 is Saturday. */

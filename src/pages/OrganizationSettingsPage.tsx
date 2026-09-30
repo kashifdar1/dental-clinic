@@ -22,6 +22,10 @@ export function OrganizationSettingsPage() {
     address: clinic.address ?? '',
     hours: clinic.hours ?? '',
     mapUrl: clinic.mapUrl ?? '',
+    tagline: clinic.tagline ?? '',
+    heroCopy: clinic.heroCopy ?? '',
+    heroImageUrl: clinic.heroImageUrl ?? '',
+    whatsappUrl: clinic.whatsappUrl ?? '',
   })
   const [regional, setRegional] = useState(organization.regionalSettings)
   const [governance, setGovernance] = useState(
@@ -39,6 +43,10 @@ export function OrganizationSettingsPage() {
   const clinicAddress = clinic.address ?? ''
   const clinicHours = clinic.hours ?? ''
   const clinicMapUrl = clinic.mapUrl ?? ''
+  const clinicTagline = clinic.tagline ?? ''
+  const clinicHeroCopy = clinic.heroCopy ?? ''
+  const clinicHeroImageUrl = clinic.heroImageUrl ?? ''
+  const clinicWhatsappUrl = clinic.whatsappUrl ?? ''
   const countryCode = organization.regionalSettings.countryCode
   const locale = organization.regionalSettings.locale
   const currency = organization.regionalSettings.currency
@@ -62,6 +70,10 @@ export function OrganizationSettingsPage() {
       address: clinicAddress,
       hours: clinicHours,
       mapUrl: clinicMapUrl,
+      tagline: clinicTagline,
+      heroCopy: clinicHeroCopy,
+      heroImageUrl: clinicHeroImageUrl,
+      whatsappUrl: clinicWhatsappUrl,
     })
     setRegional({
       countryCode,
@@ -78,32 +90,9 @@ export function OrganizationSettingsPage() {
       auditTrailRequired,
       consentTrackingRequired,
     })
-    setResult(null)
-  }, [
-    auditTrailRequired,
-    branchCode,
-    callingCode,
-    cityCode,
-    clinic.id,
-    clinicSlug,
-    clinicPhone,
-    clinicEmail,
-    clinicAddress,
-    clinicHours,
-    clinicMapUrl,
-    consentTrackingRequired,
-    countryCode,
-    currency,
-    dataResidencyRegion,
-    defaultTimeZone,
-    hostingMode,
-    locale,
-    organization.id,
-    policyProfileIds,
-    primaryDomain,
-    recordRetentionDays,
-    requireMfa,
-  ])
+  // Resync only when the selected tenant changes; saves must not clear confirmation state.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [clinic.id, organization.id])
 
   function togglePolicy(id: string) {
     setGovernance((current) => ({
@@ -270,6 +259,49 @@ export function OrganizationSettingsPage() {
                 value={clinicRouting.hours}
                 onChange={(event) =>
                   setClinicRouting({ ...clinicRouting, hours: event.target.value })
+                }
+              />
+            </div>
+            <div className="field full">
+              <label htmlFor="clinicTagline">Public tagline</label>
+              <input
+                id="clinicTagline"
+                value={clinicRouting.tagline}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, tagline: event.target.value })
+                }
+                placeholder="Trusted care, close to home."
+              />
+            </div>
+            <div className="field full">
+              <label htmlFor="clinicHeroCopy">Public hero copy</label>
+              <textarea
+                id="clinicHeroCopy"
+                value={clinicRouting.heroCopy}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, heroCopy: event.target.value })
+                }
+                placeholder="Meet experienced doctors across our clinics."
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicHeroImageUrl">Hero image URL</label>
+              <input
+                id="clinicHeroImageUrl"
+                value={clinicRouting.heroImageUrl}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, heroImageUrl: event.target.value })
+                }
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="clinicWhatsappUrl">WhatsApp URL</label>
+              <input
+                id="clinicWhatsappUrl"
+                type="url"
+                value={clinicRouting.whatsappUrl}
+                onChange={(event) =>
+                  setClinicRouting({ ...clinicRouting, whatsappUrl: event.target.value })
                 }
               />
             </div>

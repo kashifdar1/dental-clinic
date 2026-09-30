@@ -44,6 +44,10 @@ describe('OrganizationSettingsPage', () => {
     expect(screen.getByLabelText('Clinic address')).toBeInTheDocument()
     expect(screen.getByLabelText('Clinic hours')).toBeInTheDocument()
     expect(screen.getByLabelText('Map URL')).toBeInTheDocument()
+    expect(screen.getByLabelText('Public tagline')).toBeInTheDocument()
+    expect(screen.getByLabelText('Public hero copy')).toBeInTheDocument()
+    expect(screen.getByLabelText('Hero image URL')).toBeInTheDocument()
+    expect(screen.getByLabelText('WhatsApp URL')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Save organization settings' }))
 

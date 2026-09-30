@@ -67,6 +67,10 @@ export const DEMO_DATA: AppData = {
       address: 'Clifton Block 2, Karachi',
       hours: 'Mon–Sat · 9:00 AM–6:00 PM',
       mapUrl: 'https://maps.google.com/?q=Indus+Clifton+Clinic',
+      tagline: 'Trusted care, close to home.',
+      heroCopy: 'Meet experienced doctors across primary and specialty care.',
+      heroImageUrl: '/specialties/general-medicine.png',
+      whatsappUrl: 'https://wa.me/922111111111',
     },
     {
       id: 'clinic_aurora_east',
@@ -82,6 +86,10 @@ export const DEMO_DATA: AppData = {
       address: 'Gulberg III, Lahore',
       hours: 'Mon–Sat · 9:00 AM–6:00 PM',
       mapUrl: 'https://maps.google.com/?q=Indus+Gulberg+Clinic',
+      tagline: 'Connected care for every stage of life.',
+      heroCopy: 'Explore trusted specialists and find the right care for your family.',
+      heroImageUrl: '/specialties/cardiology.png',
+      whatsappUrl: 'https://wa.me/924211111111',
     },
     {
       id: 'clinic_harbor_downtown',
@@ -97,6 +105,10 @@ export const DEMO_DATA: AppData = {
       address: 'Main Boulevard, Lahore',
       hours: 'Mon–Sun · 10:00 AM–8:00 PM',
       mapUrl: 'https://maps.google.com/?q=Lasaani+Poly+Clinic',
+      tagline: 'Personal care, thoughtfully delivered.',
+      heroCopy: 'Find approachable doctors and practical care for your whole family.',
+      heroImageUrl: '/specialties/general-medicine.png',
+      whatsappUrl: 'https://wa.me/924211122233',
     },
   ],
   practitioners: [

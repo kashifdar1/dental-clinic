@@ -188,7 +188,7 @@ validated before starting the next one.
 
 ## Phase 3: features, in priority order
 
-1. [ ] **Clinic public profile editor** in settings: tagline, hero copy, hero image, address,
+1. [x] **Clinic public profile editor** in settings: tagline, hero copy, hero image, address,
        phone, hours, WhatsApp and map links. Replaces the hard-coded hero and contact strings.
 2. [ ] **Appointment request flow**: form on the doctor profile offering days from
        `AvailabilityWindow`; admin inbox with `new | contacted | booked | declined`.

@@ -80,6 +80,10 @@ describe('pure reducers', () => {
       address: 'New address',
       hours: 'Weekdays',
       mapUrl: 'https://maps.example.com/clinic',
+      tagline: 'Care close to home.',
+      heroCopy: 'Meet our team.',
+      heroImageUrl: 'https://images.example.com/hero.jpg',
+      whatsappUrl: 'https://wa.me/123',
     })
 
     expect(next.clinics[0]).toMatchObject({
@@ -88,6 +92,10 @@ describe('pure reducers', () => {
       address: 'New address',
       hours: 'Weekdays',
       mapUrl: 'https://maps.example.com/clinic',
+      tagline: 'Care close to home.',
+      heroCopy: 'Meet our team.',
+      heroImageUrl: 'https://images.example.com/hero.jpg',
+      whatsappUrl: 'https://wa.me/123',
     })
   })
 
