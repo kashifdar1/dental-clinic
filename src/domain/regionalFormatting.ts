@@ -1,5 +1,11 @@
 import type { RegionalSettings } from './types'
 
+const RTL_LANGUAGE_CODES = new Set(['ar', 'fa', 'he', 'ur'])
+
+export function getTextDirection(locale: string): 'ltr' | 'rtl' {
+  return RTL_LANGUAGE_CODES.has(locale.split('-')[0].toLowerCase()) ? 'rtl' : 'ltr'
+}
+
 export function formatDate(
   value: string,
   settings: RegionalSettings,

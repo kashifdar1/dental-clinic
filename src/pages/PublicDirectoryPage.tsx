@@ -4,6 +4,7 @@ import { PublicHeader } from '../components/PublicHeader'
 import { DoctorAvatar } from '../components/DoctorAvatar'
 import { usePageMetadata } from '../components/PageMetadata'
 import { isAvailableToday } from '../domain/availability'
+import { getTextDirection } from '../domain/regionalFormatting'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -95,7 +96,10 @@ export function PublicDirectoryPage() {
   )
 
   return (
-    <div className="public-site">
+    <div
+      className="public-site"
+      dir={getTextDirection(organization.regionalSettings.locale)}
+    >
       <PublicHeader organization={organization} homePath={homePath} />
 
       <main>

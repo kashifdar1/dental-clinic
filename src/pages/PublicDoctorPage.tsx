@@ -5,6 +5,7 @@ import { PublicHeader } from '../components/PublicHeader'
 import { usePageMetadata } from '../components/PageMetadata'
 import { formatAvailability, WEEK_DAYS } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
+import { getTextDirection } from '../domain/regionalFormatting'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -93,7 +94,10 @@ export function PublicDoctorPage() {
     (specialtyId) => SPECIALTY_MODULES[specialtyId],
   )
   return (
-    <div className="public-site">
+    <div
+      className="public-site"
+      dir={getTextDirection(organization.regionalSettings.locale)}
+    >
       <PublicHeader organization={organization} homePath={homePath} />
 
       <main className="doctor-profile-page">

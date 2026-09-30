@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { can } from '../domain/policy'
+import { getTextDirection } from '../domain/regionalFormatting'
 import { useTenant } from '../domain/TenantContext'
 
 const appName = import.meta.env.VITE_APP_NAME?.trim() || 'Clinic Hub'
@@ -18,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   } = useTenant()
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" dir={getTextDirection(organization.regionalSettings.locale)}>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">{appName}</div>

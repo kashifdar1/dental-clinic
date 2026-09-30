@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate } from './regionalFormatting'
+import { formatDate, getTextDirection } from './regionalFormatting'
+
+describe('regional text direction', () => {
+  it('uses RTL for Urdu and other RTL language locales', () => {
+    expect(getTextDirection('ur-PK')).toBe('rtl')
+    expect(getTextDirection('ar-SA')).toBe('rtl')
+    expect(getTextDirection('en-PK')).toBe('ltr')
+  })
+})
 
 describe('regional date formatting', () => {
   it('preserves date-only values across organization timezones', () => {
