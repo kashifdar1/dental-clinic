@@ -25,7 +25,16 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
   const [draft, setDraft] = useState<AvailabilityWindow>(
     value ?? DEFAULT_AVAILABILITY,
   )
+  const [activeDay, setActiveDay] = useState(
+    value?.days[0] ?? DEFAULT_AVAILABILITY.days[0],
+  )
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!draft.days.includes(activeDay)) {
+      setActiveDay(draft.days[0] ?? WEEK_DAYS[0].value)
+    }
+  }, [activeDay, draft.days])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -50,6 +59,7 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
         ? current.days.filter((item) => item !== day)
         : [...current.days, day],
     }))
+          if (!draft.days.includes(day)) setActiveDay(day)
   }
 
   function updateTime(
@@ -59,7 +69,22 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
     setError(null)
     setDraft((current) => ({
       ...current,
-      [field]: fromTimeParts({ ...toTimeParts(current[field]), ...patch }),
+      daySchedules: {
+        ...current.daySchedules,
+        [String(activeDay)]: {
+          ...(current.daySchedules?.[String(activeDay)] ?? {
+            startTime: current.startTime,
+            endTime: current.endTime,
+          }),
+          [field]: fromTimeParts({
+            ...toTimeParts(
+              current.daySchedules?.[String(activeDay)]?.[field] ??
+                current[field],
+            ),
+            ...patch,
+          }),
+        },
+      },
     }))
   }
 
@@ -72,8 +97,12 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
     onSave(draft)
   }
 
-  const start = toTimeParts(draft.startTime)
-  const end = toTimeParts(draft.endTime)
+  const activeSchedule = draft.daySchedules?.[String(activeDay)] ?? {
+    startTime: draft.startTime,
+    endTime: draft.endTime,
+  }
+  const start = toTimeParts(activeSchedule.startTime)
+  const end = toTimeParts(activeSchedule.endTime)
   const preview = formatAvailability(draft)
 
   return (
@@ -119,6 +148,21 @@ export function AvailabilityDialog({ value, onCancel, onSave }: Props) {
               )
             })}
           </div>
+        </div>
+
+        <div className="field availability-day-editor">
+          <label htmlFor="availability-edit-day">Editing hours for</label>
+          <select
+            id="availability-edit-day"
+            value={activeDay}
+            onChange={(event) => setActiveDay(Number(event.target.value))}
+          >
+            {WEEK_DAYS.filter((day) => draft.days.includes(day.value)).map((day) => (
+              <option key={day.value} value={day.value}>
+                {day.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="time-range">

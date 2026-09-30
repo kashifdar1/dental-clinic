@@ -65,6 +65,10 @@ export interface AvailabilityWindow {
   days: number[]
   startTime: string
   endTime: string
+  daySchedules?: Partial<Record<string, {
+    startTime: string
+    endTime: string
+  }>>
 }
 
 export interface Practitioner {

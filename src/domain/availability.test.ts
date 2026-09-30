@@ -65,6 +65,20 @@ describe('availability', () => {
     ).toBe('Tuesday–Sunday · 12:00 PM–6:00 PM')
   })
 
+  it('formats different hours for individual selected days', () => {
+    expect(
+      formatAvailability({
+        days: [2, 4],
+        startTime: '09:00',
+        endTime: '17:00',
+        daySchedules: {
+          '2': { startTime: '11:00', endTime: '18:00' },
+          '4': { startTime: '13:00', endTime: '19:00' },
+        },
+      }),
+    ).toBe('Tuesday · 11:00 AM–6:00 PM, Thursday · 1:00 PM–7:00 PM')
+  })
+
   it('rejects empty days and non-increasing ranges', () => {
     expect(
       validateAvailability({ days: [], startTime: '09:00', endTime: '17:00' }),
@@ -75,5 +89,16 @@ describe('availability', () => {
     expect(
       validateAvailability({ days: [1], startTime: '09:00', endTime: '17:00' }),
     ).toBeNull()
+    expect(
+      validateAvailability({
+        days: [2, 4],
+        startTime: '09:00',
+        endTime: '17:00',
+        daySchedules: {
+          '2': { startTime: '11:00', endTime: '10:00' },
+          '4': { startTime: '13:00', endTime: '19:00' },
+        },
+      }),
+    ).toMatch(/every selected day/i)
   })
 })

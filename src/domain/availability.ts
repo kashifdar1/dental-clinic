@@ -83,18 +83,44 @@ function groupDays(days: number[]): string {
   return groups.join(', ')
 }
 
+function scheduleForDay(window: AvailabilityWindow, day: number) {
+  return window.daySchedules?.[String(day)] ?? {
+    startTime: window.startTime,
+    endTime: window.endTime,
+  }
+}
+
 export function validateAvailability(window: AvailabilityWindow): string | null {
   if (window.days.length === 0) return 'Select at least one day.'
-  if (toMinutes(window.endTime) <= toMinutes(window.startTime)) {
-    return 'The closing time must be after the opening time.'
+  for (const day of window.days) {
+    const schedule = scheduleForDay(window, day)
+    if (toMinutes(schedule.endTime) <= toMinutes(schedule.startTime)) {
+      return 'The closing time must be after the opening time for every selected day.'
+    }
   }
   return null
 }
 
 export function formatAvailability(window: AvailabilityWindow): string {
   if (window.days.length === 0) return ''
-  return `${groupDays(window.days)} · ${formatTime(window.startTime)}–${formatTime(
-    window.endTime,
+  const schedules = window.days.map((day) => scheduleForDay(window, day))
+  const hasDifferentSchedules = schedules.some(
+    (schedule) =>
+      schedule.startTime !== schedules[0].startTime ||
+      schedule.endTime !== schedules[0].endTime,
+  )
+  if (hasDifferentSchedules) {
+    return window.days
+      .map((day, index) => {
+        const label = WEEK_DAYS.find((item) => item.value === day)?.label ?? day
+        const schedule = schedules[index]
+        return `${label} · ${formatTime(schedule.startTime)}–${formatTime(schedule.endTime)}`
+      })
+      .join(', ')
+  }
+  const schedule = schedules[0]
+  return `${groupDays(window.days)} · ${formatTime(schedule.startTime)}–${formatTime(
+    schedule.endTime,
   )}`
 }
 
