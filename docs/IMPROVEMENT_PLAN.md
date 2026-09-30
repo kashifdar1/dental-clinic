@@ -56,16 +56,16 @@ validated before starting the next one.
 
 ## Current checkpoint — 2026-09-29
 
-- Completed and committed Phase 0, Phase 1, and the first three Phase 2 workflow items:
-      save-status feedback, reset confirmation, and native availability dialog.
-- Last commit: `205f72b` (`refactor: use native availability dialog`). The worktree is clean.
-- Last validation: `npm run typecheck`, `npm run lint`, and `npm run test` passed; 45 tests ran.
-- Resume at the next unchecked Phase 2 item: convert standalone form group labels to
-      semantic `<fieldset>` and `<legend>` elements, starting with Specialties, Public availability,
-      and Policy profiles.
-- Remaining Phase 2 work after that: patient edit/deactivate/search, responsive admin tables,
-      public header/admin link cleanup, public metadata and anchor behavior, clinic contact/profile
-      fields, then the CSS split.
+- Phase 0, Phase 1, and the planned Phase 2/3 frontend work are complete and committed.
+- Latest commit: `12b2386` (`fix: render profession backgrounds explicitly`).
+- The branch is pushed and synchronized with `origin/feature/clinic-hub-public-directory`.
+- Latest validation: `npm run lint`, `npm run typecheck`, `npm run test` passed with 64 tests,
+      and `npm run build` passed with SEO artifacts generated.
+- Latest UI work includes persistent public language choice, expanded Urdu public strings,
+      per-day availability, clinic onboarding, appointment requests, visit notes, CSV export,
+      and five profession-themed doctor card assets.
+- Resume from here with Playwright browser E2E/accessibility/visual automation, or the external
+      production roadmap: real auth, backend API/RLS, encryption, observability, and deployment.
 
 ## How to work this plan
 
