@@ -78,12 +78,13 @@
   font-size: 0.9rem;
 }
 
-.availability-trigger {
+.btn.availability-trigger {
   text-align: left;
   white-space: pre-line;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
   background: var(--panel-solid);
+  width: 100%;
 }
 
 .availability-clear {
