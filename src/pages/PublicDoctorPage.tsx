@@ -170,7 +170,7 @@ export function PublicDoctorPage() {
                 <dt>New patients</dt>
                 <dd>
                   {doctor.acceptingPatients
-                    ? 'Currently accepting'
+                    ? <span className="accepting">Currently accepting</span>
                     : 'Existing patients only'}
                 </dd>
               </div>
