@@ -14,6 +14,7 @@ import {
   importPractitioners,
   loadAppData,
   setTenantContext,
+  updateAppointmentRequestStatus,
   updateClinicRouting,
   updateOrganizationSettings,
   upsertPatient,
@@ -23,6 +24,8 @@ import { DEMO_DATA } from './seed'
 import { LocalStorageStore } from './store'
 import type {
   AppData,
+  AppointmentRequest,
+  AppointmentRequestStatus,
   Clinic,
   GovernanceSettings,
   HostingSettings,
@@ -47,6 +50,7 @@ interface TenantState {
   clinics: Clinic[]
   practitioners: Practitioner[]
   patients: Patient[]
+  appointmentRequests: AppointmentRequest[]
   activeModules: SpecialtyModule[]
   switchOrganization: (organizationId: string) => void
   switchClinic: (clinicId: string) => void
@@ -82,6 +86,10 @@ interface TenantState {
     heroImageUrl?: string
     whatsappUrl?: string
   }) => Promise<MutationResult>
+  updateAppointmentRequestStatus: (
+    requestId: string,
+    status: AppointmentRequestStatus,
+  ) => Promise<MutationResult>
   resetDemo: () => void
 }
 
@@ -105,6 +113,11 @@ function resolveScoped(data: AppData) {
   )
   const practitioners = getScopedPractitioners(data, data.context)
   const patients = getScopedPatients(data, data.context)
+  const appointmentRequests = data.appointmentRequests.filter(
+    (request) =>
+      request.organizationId === data.context.organizationId &&
+      request.clinicId === data.context.clinicId,
+  )
   const activeModules = getActiveModules(practitioners)
 
   return {
@@ -114,6 +127,7 @@ function resolveScoped(data: AppData) {
     clinics,
     practitioners,
     patients,
+    appointmentRequests,
     activeModules,
   }
 }
@@ -215,6 +229,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     void applyMutation(() => structuredClone(DEMO_DATA))
   }, [applyMutation])
 
+  const changeAppointmentRequestStatus = useCallback(
+    (requestId: string, nextStatus: AppointmentRequestStatus) =>
+      applyMutation((current) =>
+        updateAppointmentRequestStatus(
+          current,
+          current.context,
+          requestId,
+          nextStatus,
+        ),
+      ),
+    [applyMutation],
+  )
+
   const value: TenantState = {
     data,
     ...scoped,
@@ -228,6 +255,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     saveOrganizationSettings,
     saveClinicRouting,
     resetDemo,
+    updateAppointmentRequestStatus: changeAppointmentRequestStatus,
   }
 
   return (
