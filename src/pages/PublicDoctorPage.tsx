@@ -100,6 +100,7 @@ export function PublicDoctorPage() {
   const specialties = doctor.specialties.map(
     (specialtyId) => SPECIALTY_MODULES[specialtyId],
   )
+  const primarySpecialty = doctor.specialties[0] ?? 'general_medicine'
   return (
     <div className="public-site">
       <PublicHeader organization={organization} homePath={homePath} language={uiLanguage} />
@@ -113,6 +114,7 @@ export function PublicDoctorPage() {
           <DoctorAvatar
             className="doctor-profile-thumbnail"
             practitioner={doctor}
+            specialtyId={primarySpecialty}
           />
           <div className="doctor-profile-title">
             <div className="chip-row">

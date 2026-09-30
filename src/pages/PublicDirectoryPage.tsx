@@ -215,6 +215,7 @@ export function PublicDirectoryPage() {
                     <DoctorAvatar
                       className="doctor-thumbnail"
                       practitioner={doctor}
+                      specialtyId={doctor.specialties[0]}
                     />
                     <div className="doctor-card-body">
                       <div className="chip-row">
