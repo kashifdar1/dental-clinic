@@ -59,6 +59,7 @@ interface TenantState {
   activeModules: SpecialtyModule[]
   switchOrganization: (organizationId: string) => void
   switchClinic: (clinicId: string) => void
+  switchMembership: (membershipId: string) => void
   status: 'idle' | 'saving' | 'error'
   error: string | null
   savePractitioner: (
@@ -198,6 +199,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     void applyMutation((current) => setTenantContext(current, { clinicId }), 'tenant.clinic_switched')
   }, [applyMutation])
 
+  const switchMembership = useCallback((membershipId: string) => {
+    void applyMutation(
+      (current) => setTenantContext(current, { membershipId }),
+      'tenant.membership_selected',
+    )
+  }, [applyMutation])
+
   const savePractitioner = useCallback(
     (
       input: Omit<Practitioner, 'id' | 'organizationId' | 'clinicId'> & {
@@ -299,6 +307,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     error,
     switchOrganization,
     switchClinic,
+    switchMembership,
     savePractitioner,
     bulkImportPractitioners,
     savePatient,

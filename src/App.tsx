@@ -4,6 +4,7 @@ import { AdminLayout, RequireMembership } from './components/AdminLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { TenantProvider } from './domain/TenantContext'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { LoginPage } from './pages/LoginPage'
 import { PublicDirectoryPage } from './pages/PublicDirectoryPage'
 import { PublicDoctorPage } from './pages/PublicDoctorPage'
 import { PublicTenantProvider } from './public/PublicTenantContext'
@@ -84,6 +85,7 @@ export default function App() {
               </Route>
             </Route>
             <Route path="/not-found" element={<NotFoundPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Routes>
         </BrowserRouter>
