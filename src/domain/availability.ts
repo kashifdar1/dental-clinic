@@ -116,7 +116,7 @@ export function formatAvailability(window: AvailabilityWindow): string {
         const schedule = schedules[index]
         return `${label} · ${formatTime(schedule.startTime)}–${formatTime(schedule.endTime)}`
       })
-      .join(', ')
+      .join('\n')
   }
   const schedule = schedules[0]
   return `${groupDays(window.days)} · ${formatTime(schedule.startTime)}–${formatTime(

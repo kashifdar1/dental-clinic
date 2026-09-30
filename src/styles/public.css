@@ -224,7 +224,10 @@
 }
 
 .accepting {
-  color: var(--brand);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--brand);
   font-weight: 600;
 }
 
@@ -364,6 +367,7 @@
 
 .profile-facts dd {
   margin: 0.25rem 0 0;
+  white-space: pre-line;
 }
 
 .profile-specialties {

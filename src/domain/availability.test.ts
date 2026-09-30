@@ -76,7 +76,7 @@ describe('availability', () => {
           '4': { startTime: '13:00', endTime: '19:00' },
         },
       }),
-    ).toBe('Tuesday · 11:00 AM–6:00 PM, Thursday · 1:00 PM–7:00 PM')
+    ).toBe('Tuesday · 11:00 AM–6:00 PM\nThursday · 1:00 PM–7:00 PM')
   })
 
   it('rejects empty days and non-increasing ranges', () => {
