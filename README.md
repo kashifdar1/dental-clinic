@@ -19,7 +19,9 @@ Other scripts:
 - `npm run lint` — oxlint
 - `npm run preview` — preview the production build
 
-Copy `.env.example` to `.env` if you want to override the app name or storage key.
+Copy `.env.example` to `.env` if you want to override the app name, storage key, host override,
+or public SEO origin. Production builds generate static public route shells, `sitemap.xml`, and
+`robots.txt`; set `VITE_PUBLIC_SITE_ORIGIN` to the deployed public origin.
 
 ## Demo walkthrough
 
