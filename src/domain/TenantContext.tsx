@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -137,15 +138,28 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const store = useMemo(() => new LocalStorageStore(), [])
+  const dataRef = useRef(data)
   const scoped = useMemo(() => resolveScoped(data), [data])
 
   const applyMutation = useCallback(
-    async (mutation: (current: AppData) => AppData): Promise<MutationResult> => {
+    async (
+      mutation: (current: AppData) => AppData,
+      action: string,
+    ): Promise<MutationResult> => {
       setStatus('saving')
       setError(null)
       try {
-        const next = mutation(data)
+        const next = mutation(dataRef.current)
+        next.auditEvents.push({
+          id: `audit_${crypto.randomUUID().slice(0, 8)}`,
+          organizationId: dataRef.current.context.organizationId,
+          clinicId: dataRef.current.context.clinicId,
+          membershipId: dataRef.current.context.membershipId,
+          action,
+          occurredAt: new Date().toISOString(),
+        })
         await store.save(next)
+        dataRef.current = next
         setData(next)
         setStatus('idle')
         return { ok: true }
@@ -157,15 +171,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         return { ok: false, message }
       }
     },
-    [data, store],
+    [store],
   )
 
   const switchOrganization = useCallback((organizationId: string) => {
-    void applyMutation((current) => setTenantContext(current, { organizationId }))
+    void applyMutation((current) => setTenantContext(current, { organizationId }), 'tenant.organization_switched')
   }, [applyMutation])
 
   const switchClinic = useCallback((clinicId: string) => {
-    void applyMutation((current) => setTenantContext(current, { clinicId }))
+    void applyMutation((current) => setTenantContext(current, { clinicId }), 'tenant.clinic_switched')
   }, [applyMutation])
 
   const savePractitioner = useCallback(
@@ -176,6 +190,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     ) => {
       return applyMutation((current) =>
         upsertPractitioner(current, current.context, input),
+        input.id ? 'practitioner.updated' : 'practitioner.created',
       )
     },
     [applyMutation],
@@ -189,6 +204,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     ) => {
       return applyMutation((current) =>
         upsertPatient(current, current.context, input),
+        input.id ? 'patient.updated' : 'patient.created',
       )
     },
     [applyMutation],
@@ -198,6 +214,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     (inputs: PractitionerImportInput[]) => {
       return applyMutation((current) =>
         importPractitioners(current, current.context, inputs),
+        'practitioner.bulk_imported',
       )
     },
     [applyMutation],
@@ -211,6 +228,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }) => {
       return applyMutation((current) =>
         updateOrganizationSettings(current, current.context, input),
+        'organization.settings_updated',
       )
     },
     [applyMutation],
@@ -220,13 +238,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     (input: { cityCode: string; branchCode: string; slug: string }) => {
       return applyMutation((current) =>
         updateClinicRouting(current, current.context, input),
+        'clinic.profile_updated',
       )
     },
     [applyMutation],
   )
 
   const resetDemo = useCallback(() => {
-    void applyMutation(() => structuredClone(DEMO_DATA))
+    void applyMutation(() => structuredClone(DEMO_DATA), 'demo.reset')
   }, [applyMutation])
 
   const changeAppointmentRequestStatus = useCallback(
@@ -238,6 +257,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           requestId,
           nextStatus,
         ),
+        'appointment_request.status_updated',
       ),
     [applyMutation],
   )

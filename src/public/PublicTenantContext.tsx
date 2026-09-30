@@ -73,6 +73,14 @@ export function PublicTenantProvider({ children }: { children: ReactNode }) {
           organizationId: organization.id,
           clinicId: clinic.id,
         })
+        next.auditEvents.push({
+          id: `audit_${crypto.randomUUID().slice(0, 8)}`,
+          organizationId: organization.id,
+          clinicId: clinic.id,
+          membershipId: 'public',
+          action: 'appointment_request.created',
+          occurredAt: new Date().toISOString(),
+        })
         await store.save(next)
         setData(next)
         return { ok: true }

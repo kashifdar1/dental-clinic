@@ -194,7 +194,7 @@ validated before starting the next one.
        `AvailabilityWindow`; admin inbox with `new | contacted | booked | declined`.
 3. [x] **Directory search and "available today"** using the window and clinic timezone.
 4. [x] **Doctor photos** (data URL in the demo store) with an initials avatar fallback.
-5. [ ] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
+5. [x] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
        the governance flags claim this and nothing records it.
 6. [ ] **Visit notes per specialty module**; modules are hint stubs today.
 7. [ ] **Richer CSV**: qualifications, languages, availability, accepting; plus export.

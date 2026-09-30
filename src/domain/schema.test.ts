@@ -29,4 +29,15 @@ describe('app data schema', () => {
       'Unsupported app data schema version: 99',
     )
   })
+
+  it('migrates version 2 data with an empty audit log', () => {
+    const versionTwo = structuredClone(DEMO_DATA) as unknown as Record<string, unknown>
+    versionTwo.schemaVersion = 2
+    delete versionTwo.auditEvents
+
+    const migrated = migrate(versionTwo)
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect(migrated.auditEvents).toEqual([])
+  })
 })

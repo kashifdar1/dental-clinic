@@ -1,6 +1,6 @@
 import type { AppData } from './types'
 
-export const CURRENT_SCHEMA_VERSION = 2
+export const CURRENT_SCHEMA_VERSION = 3
 
 type RecordValue = Record<string, unknown>
 
@@ -26,6 +26,7 @@ function isAppData(value: unknown): value is AppData {
     !Array.isArray(value.practitioners) ||
     !Array.isArray(value.patients) ||
     !Array.isArray(value.appointmentRequests) ||
+    !Array.isArray(value.auditEvents) ||
     !Array.isArray(value.memberships) ||
     !isRecord(value.context) ||
     !hasStringFields(value.context, [
@@ -85,6 +86,16 @@ function isAppData(value: unknown): value is AppData {
         'createdAt',
       ]),
     ) &&
+    value.auditEvents.every((item) =>
+      hasStringFields(item, [
+        'id',
+        'organizationId',
+        'clinicId',
+        'membershipId',
+        'action',
+        'occurredAt',
+      ]),
+    ) &&
     value.memberships.every((item) =>
       hasStringFields(item, [
         'id',
@@ -114,6 +125,14 @@ export function migrate(raw: unknown): AppData {
       ...migrated,
       schemaVersion: version,
       appointmentRequests: [],
+    }
+  }
+  if (version === 2) {
+    version = CURRENT_SCHEMA_VERSION
+    migrated = {
+      ...migrated,
+      schemaVersion: version,
+      auditEvents: [],
     }
   }
   if (version !== CURRENT_SCHEMA_VERSION) {

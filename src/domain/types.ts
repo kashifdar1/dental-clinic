@@ -126,6 +126,15 @@ export interface AppointmentRequest {
   createdAt: string
 }
 
+export interface AuditEvent {
+  id: string
+  organizationId: string
+  clinicId: string
+  membershipId: string
+  action: string
+  occurredAt: string
+}
+
 export interface Membership {
   id: string
   organizationId: string
@@ -148,6 +157,7 @@ export interface AppData {
   practitioners: Practitioner[]
   patients: Patient[]
   appointmentRequests: AppointmentRequest[]
+  auditEvents: AuditEvent[]
   memberships: Membership[]
   context: TenantContext
 }

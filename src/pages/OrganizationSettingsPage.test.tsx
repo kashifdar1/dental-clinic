@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { TenantProvider } from '../domain/TenantContext'
-import { resetDemoData } from '../domain/repository'
+import { loadAppData, resetDemoData } from '../domain/repository'
 import { OrganizationSettingsPage } from './OrganizationSettingsPage'
 
 function renderPage() {
@@ -52,5 +52,10 @@ describe('OrganizationSettingsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Save organization settings' }))
 
     expect(await screen.findByText('Saved')).toBeInTheDocument()
+    expect(
+      loadAppData().auditEvents.some(
+        (event) => event.action === 'organization.settings_updated',
+      ),
+    ).toBe(true)
   })
 })
