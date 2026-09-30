@@ -4,9 +4,13 @@ import { DoctorAvatar } from '../components/DoctorAvatar'
 import { LanguagePreference } from '../components/LanguagePreference'
 import { PublicHeader } from '../components/PublicHeader'
 import { usePageMetadata } from '../components/PageMetadata'
-import { formatAvailability, WEEK_DAYS } from '../domain/availability'
+import { WEEK_DAYS } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
-import { getUiStrings } from '../domain/uiStrings'
+import {
+  formatLocalizedAvailability,
+  getSpecialtyLabel,
+  getUiStrings,
+} from '../domain/uiStrings'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -102,7 +106,7 @@ export function PublicDoctorPage() {
 
       <main className="doctor-profile-page">
         <Link className="back-link" to={homePath}>
-          ← Back to all doctors
+          ← {strings.backToDoctors}
         </Link>
 
         <section className="doctor-profile-hero">
@@ -130,12 +134,12 @@ export function PublicDoctorPage() {
             <div className="btn-row">
               {publicContact.phone ? (
                 <a className="btn" href={`tel:${publicContact.phone}`}>
-                  Call {publicContact.phone}
+                  {strings.phone} {publicContact.phone}
                 </a>
               ) : null}
               {publicContact.email ? (
                 <a className="btn secondary" href={`mailto:${publicContact.email}`}>
-                  Email clinic
+                  {strings.contactClinic}
                 </a>
               ) : null}
               <button className="btn secondary" type="button" onClick={() => setRequestOpen(true)}>
@@ -147,7 +151,7 @@ export function PublicDoctorPage() {
 
         <div className="doctor-profile-grid">
           <section className="panel profile-section">
-            <h2>About the doctor</h2>
+            <h2>{strings.aboutDoctor}</h2>
             <dl className="profile-facts">
               <div>
                 <dt>Clinic</dt>
@@ -157,34 +161,34 @@ export function PublicDoctorPage() {
                 </dd>
               </div>
               <div>
-                <dt>Availability</dt>
+                <dt>{strings.availability}</dt>
                 <dd>
                   {doctor.availability
-                    ? formatAvailability(doctor.availability)
-                    : doctor.availabilitySummary || 'Contact clinic'}
+                    ? formatLocalizedAvailability(doctor.availability, uiLanguage)
+                    : doctor.availabilitySummary || strings.contactClinic}
                 </dd>
               </div>
               <div>
-                <dt>Languages</dt>
-                <dd>{doctor.languages?.join(', ') || 'Contact clinic'}</dd>
+                <dt>{strings.languages}</dt>
+                <dd>{doctor.languages?.join(', ') || strings.contactClinic}</dd>
               </div>
               <div>
-                <dt>New patients</dt>
+                <dt>{strings.newPatients}</dt>
                 <dd>
                   {doctor.acceptingPatients
-                    ? <span className="accepting">Currently accepting</span>
-                    : 'Existing patients only'}
+                    ? <span className="accepting">{strings.currentlyAccepting}</span>
+                    : strings.existingPatientsOnly}
                 </dd>
               </div>
             </dl>
           </section>
 
           <section className="panel profile-section">
-            <h2>Specialties and care</h2>
+            <h2>{strings.specialtiesAndCare}</h2>
             <div className="profile-specialties">
               {specialties.map((specialty) => (
                 <div key={specialty.id}>
-                  <h3>{specialty.label}</h3>
+                  <h3>{getSpecialtyLabel(specialty.id, uiLanguage)}</h3>
                   <p className="muted">{specialty.description}</p>
                 </div>
               ))}
@@ -294,7 +298,7 @@ export function PublicDoctorPage() {
 
       <footer className="public-footer">
         <span>© {new Date().getFullYear()} {organization.name}</span>
-        <span>For emergencies, contact your local emergency service.</span>
+        <span>{strings.emergencyNotice}</span>
       </footer>
       <LanguagePreference />
     </div>

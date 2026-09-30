@@ -20,7 +20,7 @@ export function PublicHeader({
         </span>
         <span>
           <strong>{organization.name}</strong>
-          <small>Care across specialties</small>
+          <small>{strings.careAcrossSpecialties}</small>
         </span>
       </Link>
       <nav className="public-nav" aria-label="Public navigation">

@@ -5,7 +5,7 @@ import { DoctorAvatar } from '../components/DoctorAvatar'
 import { LanguagePreference } from '../components/LanguagePreference'
 import { usePageMetadata } from '../components/PageMetadata'
 import { isAvailableToday } from '../domain/availability'
-import { getUiStrings } from '../domain/uiStrings'
+import { getSpecialtyLabel, getUiStrings } from '../domain/uiStrings'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -114,8 +114,7 @@ export function PublicDirectoryPage() {
             </span>
             <h1>{resolvedClinic?.name || strings.findDoctor}</h1>
             <p>
-              {resolvedClinic?.heroCopy ||
-                'Meet experienced practitioners across our clinics, explore their specialties, and contact the clinic directly.'}
+              {resolvedClinic?.heroCopy || strings.heroDescription}
             </p>
             <a className="btn" href="#doctors">
               {strings.meetDoctors}
@@ -131,8 +130,8 @@ export function PublicDirectoryPage() {
             ) : null}
             <span className="hero-note-number">{doctors.length}</span>
             <span>
-              active practitioners across {clinics.length}{' '}
-              {clinics.length === 1 ? 'clinic' : 'clinics'}
+              {strings.activePractitionersAcross} {clinics.length}{' '}
+              {clinics.length === 1 ? strings.clinicSingular : strings.clinicPlural}
             </span>
           </div>
         </section>
@@ -140,8 +139,8 @@ export function PublicDirectoryPage() {
         <section className="public-doctors" id="doctors">
           <div className="public-section-heading">
             <div>
-              <span className="eyebrow">Our clinical team</span>
-              <h2>Doctors who listen, explain, and care.</h2>
+              <span className="eyebrow">{strings.clinicalTeam}</span>
+              <h2>{strings.doctorsWhoCare}</h2>
             </div>
             <div className="directory-filters">
               <div className="field directory-search">
@@ -150,7 +149,7 @@ export function PublicDirectoryPage() {
                   id="public-doctor-search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Name, specialty, or clinic"
+                  placeholder={strings.searchPlaceholder}
                 />
               </div>
               {!resolvedClinic && clinics.length > 1 ? (
@@ -182,7 +181,7 @@ export function PublicDirectoryPage() {
                   <option value="all">{strings.allSpecialties}</option>
                   {specialtyOptions.map((specialty) => (
                     <option key={specialty.id} value={specialty.id}>
-                      {specialty.label}
+                      {getSpecialtyLabel(specialty.id, uiLanguage)}
                     </option>
                   ))}
                 </select>
@@ -221,7 +220,7 @@ export function PublicDirectoryPage() {
                       <div className="chip-row">
                         {specialties.map((specialty) => (
                           <span className="chip" key={specialty.id}>
-                            {specialty.label}
+                            {getSpecialtyLabel(specialty.id, uiLanguage)}
                           </span>
                         ))}
                       </div>
@@ -237,9 +236,9 @@ export function PublicDirectoryPage() {
                       <div className="doctor-meta">
                         <span>{clinic?.name}</span>
                         {doctor.acceptingPatients ? (
-                          <span className="accepting">Accepting patients</span>
+                          <span className="accepting">{strings.acceptingPatients}</span>
                         ) : (
-                          <span>Existing patients only</span>
+                          <span>{strings.existingPatientsOnly}</span>
                         )}
                       </div>
                       <Link
@@ -251,7 +250,7 @@ export function PublicDirectoryPage() {
                           doctor.id,
                         )}
                       >
-                        View profile <span aria-hidden="true">→</span>
+                        {strings.viewProfile} <span aria-hidden="true">→</span>
                       </Link>
                     </div>
                   </article>
@@ -263,7 +262,7 @@ export function PublicDirectoryPage() {
 
         <section className="public-contact" id="contact">
           <div>
-            <span className="eyebrow">Need help choosing?</span>
+            <span className="eyebrow">{strings.needHelpChoosing}</span>
             <h2>{strings.contactNearestClinic}</h2>
           </div>
           <div className="clinic-contact-grid">
