@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { getUiStrings } from '../domain/uiStrings'
 import type { Organization } from '../domain/types'
 
 export function PublicHeader({
@@ -8,6 +9,7 @@ export function PublicHeader({
   organization: Organization
   homePath: string
 }) {
+  const strings = getUiStrings(organization.regionalSettings.locale)
   return (
     <header className="public-header">
       <Link className="public-brand" to={homePath}>
@@ -20,8 +22,8 @@ export function PublicHeader({
         </span>
       </Link>
       <nav className="public-nav" aria-label="Public navigation">
-        <a href={`${homePath}#doctors`}>Our doctors</a>
-        <a href={`${homePath}#contact`}>Contact</a>
+        <a href={`${homePath}#doctors`}>{strings.ourDoctors}</a>
+        <a href={`${homePath}#contact`}>{strings.contact}</a>
       </nav>
     </header>
   )

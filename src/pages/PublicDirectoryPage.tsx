@@ -5,6 +5,7 @@ import { DoctorAvatar } from '../components/DoctorAvatar'
 import { usePageMetadata } from '../components/PageMetadata'
 import { isAvailableToday } from '../domain/availability'
 import { getTextDirection } from '../domain/regionalFormatting'
+import { getUiStrings } from '../domain/uiStrings'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -89,6 +90,7 @@ export function PublicDirectoryPage() {
   )
 
   if (!organization) return <Navigate to="/not-found" replace />
+  const strings = getUiStrings(organization.regionalSettings.locale)
   const homePath = buildPublicDemoPath(
     organization,
     resolvedClinic,
@@ -106,15 +108,15 @@ export function PublicDirectoryPage() {
         <section className="public-hero">
           <div className="public-hero-copy">
             <span className="eyebrow">
-              {resolvedClinic?.tagline || 'Trusted, connected care'}
+              {resolvedClinic?.tagline || strings.trustedCare}
             </span>
-            <h1>{resolvedClinic?.name || organization.name}</h1>
+            <h1>{resolvedClinic?.name || strings.findDoctor}</h1>
             <p>
               {resolvedClinic?.heroCopy ||
                 'Meet experienced practitioners across our clinics, explore their specialties, and contact the clinic directly.'}
             </p>
             <a className="btn" href="#doctors">
-              Meet our doctors
+              {strings.meetDoctors}
             </a>
           </div>
           <div className="hero-note">
@@ -141,7 +143,7 @@ export function PublicDirectoryPage() {
             </div>
             <div className="directory-filters">
               <div className="field directory-search">
-                <label htmlFor="public-doctor-search">Search doctors</label>
+                <label htmlFor="public-doctor-search">{strings.searchDoctors}</label>
                 <input
                   id="public-doctor-search"
                   value={search}
@@ -151,13 +153,13 @@ export function PublicDirectoryPage() {
               </div>
               {!resolvedClinic && clinics.length > 1 ? (
                 <div className="field">
-                  <label htmlFor="public-clinic-filter">Clinic</label>
+                  <label htmlFor="public-clinic-filter">{strings.clinic}</label>
                   <select
                     id="public-clinic-filter"
                     value={clinicId}
                     onChange={(event) => setClinicId(event.target.value)}
                   >
-                    <option value="all">All clinics</option>
+                    <option value="all">{strings.allClinics}</option>
                     {clinics.map((clinic) => (
                       <option key={clinic.id} value={clinic.id}>
                         {clinic.name}
@@ -167,7 +169,7 @@ export function PublicDirectoryPage() {
                 </div>
               ) : null}
               <div className="field">
-                <label htmlFor="public-specialty-filter">Specialty</label>
+                <label htmlFor="public-specialty-filter">{strings.specialty}</label>
                 <select
                   id="public-specialty-filter"
                   value={specialtyId}
@@ -175,7 +177,7 @@ export function PublicDirectoryPage() {
                     setSpecialtyId(event.target.value as 'all' | SpecialtyId)
                   }
                 >
-                  <option value="all">All specialties</option>
+                  <option value="all">{strings.allSpecialties}</option>
                   {specialtyOptions.map((specialty) => (
                     <option key={specialty.id} value={specialty.id}>
                       {specialty.label}
@@ -189,14 +191,14 @@ export function PublicDirectoryPage() {
                   checked={availableToday}
                   onChange={(event) => setAvailableToday(event.target.checked)}
                 />
-                Available today
+                {strings.availableToday}
               </label>
             </div>
           </div>
 
           {doctors.length === 0 ? (
             <div className="empty">
-              No doctors match these filters. Try another clinic or specialty.
+              {strings.noDoctorMatches}
             </div>
           ) : (
             <div className="doctor-card-grid">
@@ -260,7 +262,7 @@ export function PublicDirectoryPage() {
         <section className="public-contact" id="contact">
           <div>
             <span className="eyebrow">Need help choosing?</span>
-            <h2>Contact your nearest clinic.</h2>
+            <h2>{strings.contactNearestClinic}</h2>
           </div>
           <div className="clinic-contact-grid">
             {clinics.map((clinic) => (

@@ -6,6 +6,7 @@ import { usePageMetadata } from '../components/PageMetadata'
 import { formatAvailability, WEEK_DAYS } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
 import { getTextDirection } from '../domain/regionalFormatting'
+import { getUiStrings } from '../domain/uiStrings'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -59,6 +60,7 @@ export function PublicDoctorPage() {
     return <Navigate to="/not-found" replace />
 
   const publicContact = getPublicContact(doctor, clinic)
+  const strings = getUiStrings(organization.regionalSettings.locale)
 
   async function submitRequest(event: React.FormEvent) {
     event.preventDefault()
@@ -139,7 +141,7 @@ export function PublicDoctorPage() {
                 </a>
               ) : null}
               <button className="btn secondary" type="button" onClick={() => setRequestOpen(true)}>
-                Request appointment
+                {strings.requestAppointment}
               </button>
             </div>
           </div>
@@ -196,9 +198,9 @@ export function PublicDoctorPage() {
           <section className="panel profile-section appointment-request">
             <div className="page-header">
               <div>
-                <h2>Request an appointment</h2>
+                <h2>{strings.requestAppointment}</h2>
                 <p className="muted">
-                  Share your details and the clinic will contact you to confirm a time.
+                  {strings.requestAppointmentHelp}
                 </p>
               </div>
               <button
@@ -206,12 +208,12 @@ export function PublicDoctorPage() {
                 type="button"
                 onClick={() => setRequestOpen(false)}
               >
-                Close
+                {strings.close}
               </button>
             </div>
             <form className="form-grid" onSubmit={submitRequest}>
               <div className="field">
-                <label htmlFor="requestPatientName">Your name</label>
+                <label htmlFor="requestPatientName">{strings.yourName}</label>
                 <input
                   id="requestPatientName"
                   value={requestForm.patientName}
@@ -222,7 +224,7 @@ export function PublicDoctorPage() {
                 />
               </div>
               <div className="field">
-                <label htmlFor="requestPhone">Phone</label>
+                <label htmlFor="requestPhone">{strings.phone}</label>
                 <input
                   id="requestPhone"
                   value={requestForm.phone}
@@ -233,7 +235,7 @@ export function PublicDoctorPage() {
                 />
               </div>
               <div className="field">
-                <label htmlFor="requestEmail">Email</label>
+                <label htmlFor="requestEmail">{strings.email}</label>
                 <input
                   id="requestEmail"
                   type="email"
@@ -245,7 +247,7 @@ export function PublicDoctorPage() {
               </div>
               {doctor.availability ? (
                 <div className="field">
-                  <label htmlFor="requestPreferredDay">Preferred day</label>
+                  <label htmlFor="requestPreferredDay">{strings.preferredDay}</label>
                   <select
                     id="requestPreferredDay"
                     value={requestForm.preferredDay}
@@ -253,7 +255,7 @@ export function PublicDoctorPage() {
                       setRequestForm({ ...requestForm, preferredDay: event.target.value })
                     }
                   >
-                    <option value="">Any available day</option>
+                    <option value="">{strings.anyAvailableDay}</option>
                     {WEEK_DAYS.filter((day) => doctor.availability?.days.includes(day.value)).map(
                       (day) => (
                         <option key={day.value} value={day.value}>
@@ -265,7 +267,7 @@ export function PublicDoctorPage() {
                 </div>
               ) : null}
               <div className="field full">
-                <label htmlFor="requestMessage">Message</label>
+                <label htmlFor="requestMessage">{strings.message}</label>
                 <textarea
                   id="requestMessage"
                   value={requestForm.message}
@@ -277,12 +279,14 @@ export function PublicDoctorPage() {
               </div>
               <div className="btn-row full">
                 <button className="btn" type="submit">
-                  Send request
+                  {strings.sendRequest}
                 </button>
               </div>
               {requestResult ? (
                 <div className="import-message full" role="status">
-                  {requestResult}
+                  {requestResult === 'Request sent to the clinic.'
+                    ? strings.requestSent
+                    : requestResult}
                 </div>
               ) : null}
             </form>

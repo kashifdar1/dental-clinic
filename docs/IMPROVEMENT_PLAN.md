@@ -198,7 +198,7 @@ validated before starting the next one.
        the governance flags claim this and nothing records it.
 6. [x] **Visit notes per specialty module**; modules are hint stubs today.
 7. [x] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
-8. [ ] **Urdu and RTL**: `ur-PK` is seeded but there is no string table or `dir` handling.
+8. [x] **Urdu and RTL**: `ur-PK` now has a public string table and locale-based `dir` handling.
 9. [x] **Login stub** with membership picker and role-gated routes.
 10. [ ] **SEO prerendering** of public routes once the public tree is decoupled (Phase 1).
 
