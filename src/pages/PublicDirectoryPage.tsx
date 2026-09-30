@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { DoctorAvatar } from '../components/DoctorAvatar'
+import { LanguagePreference } from '../components/LanguagePreference'
 import { usePageMetadata } from '../components/PageMetadata'
 import { isAvailableToday } from '../domain/availability'
 import { getUiStrings } from '../domain/uiStrings'
@@ -11,7 +12,12 @@ import { usePublicTenant } from '../public/PublicTenantContext'
 import type { SpecialtyId } from '../domain/types'
 
 export function PublicDirectoryPage() {
-  const { data, organization, clinic: resolvedClinic } = usePublicTenant()
+  const {
+    data,
+    organization,
+    clinic: resolvedClinic,
+    uiLanguage,
+  } = usePublicTenant()
   const [clinicId, setClinicId] = useState('all')
   const [specialtyId, setSpecialtyId] = useState<'all' | SpecialtyId>('all')
   const [search, setSearch] = useState('')
@@ -89,7 +95,7 @@ export function PublicDirectoryPage() {
   )
 
   if (!organization) return <Navigate to="/not-found" replace />
-  const strings = getUiStrings(organization.regionalSettings.locale)
+  const strings = getUiStrings(uiLanguage)
   const homePath = buildPublicDemoPath(
     organization,
     resolvedClinic,
@@ -98,7 +104,7 @@ export function PublicDirectoryPage() {
 
   return (
     <div className="public-site">
-      <PublicHeader organization={organization} homePath={homePath} />
+      <PublicHeader organization={organization} homePath={homePath} language={uiLanguage} />
 
       <main>
         <section className="public-hero">
@@ -288,6 +294,7 @@ export function PublicDirectoryPage() {
         <span>© {new Date().getFullYear()} {organization.name}</span>
         <span>For emergencies, contact your local emergency service.</span>
       </footer>
+      <LanguagePreference />
     </div>
   )
 }

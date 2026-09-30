@@ -5,11 +5,13 @@ import type { Organization } from '../domain/types'
 export function PublicHeader({
   organization,
   homePath,
+  language,
 }: {
   organization: Organization
   homePath: string
+  language?: string
 }) {
-  const strings = getUiStrings(organization.regionalSettings.locale)
+  const strings = getUiStrings(language ?? organization.regionalSettings.locale)
   return (
     <header className="public-header">
       <Link className="public-brand" to={homePath}>

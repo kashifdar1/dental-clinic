@@ -1,3 +1,15 @@
+export type UiLanguage = 'en' | 'ur'
+export const UI_LANGUAGE_STORAGE_KEY = 'clinic-hub-ui-language'
+
+export function getStoredUiLanguage(): UiLanguage | null {
+  const value = localStorage.getItem(UI_LANGUAGE_STORAGE_KEY)
+  return value === 'en' || value === 'ur' ? value : null
+}
+
+export function storeUiLanguage(language: UiLanguage): void {
+  localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, language)
+}
+
 export interface UiStrings {
   ourDoctors: string
   contact: string

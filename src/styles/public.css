@@ -289,6 +289,41 @@
   font-size: 0.85rem;
 }
 
+.language-switch {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  background: var(--panel-solid);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.language-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(28, 26, 22, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.language-prompt {
+  display: grid;
+  gap: 1rem;
+  width: min(420px, 100%);
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-solid);
+  box-shadow: 0 24px 60px rgba(28, 26, 22, 0.25);
+}
+
 .doctor-profile-page {
   max-width: 1080px;
   margin: 0 auto;

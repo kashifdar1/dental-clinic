@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -14,6 +15,11 @@ import {
   type ResolvedPublicTenant,
 } from '../domain/publicTenantResolver'
 import type { AppData, Clinic, Organization } from '../domain/types'
+import {
+  getStoredUiLanguage,
+  storeUiLanguage,
+  type UiLanguage,
+} from '../domain/uiStrings'
 
 interface PublicTenantState {
   data: AppData
@@ -27,6 +33,10 @@ interface PublicTenantState {
     preferredDay?: number
     message?: string
   }) => Promise<PublicMutationResult>
+  uiLanguage: UiLanguage
+  languagePromptOpen: boolean
+  selectUiLanguage: (language: UiLanguage) => void
+  reopenLanguagePrompt: () => void
 }
 
 export type PublicMutationResult =
@@ -39,6 +49,10 @@ export function PublicTenantProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
   const { organizationSlug, cityCode, branchCode } = useParams()
   const [data, setData] = useState<AppData>(() => loadAppData())
+  const [uiLanguage, setUiLanguage] = useState<UiLanguage>(
+    () => getStoredUiLanguage() ?? 'en',
+  )
+  const [languagePromptOpen, setLanguagePromptOpen] = useState(false)
   const store = useMemo(() => new LocalStorageStore(), [])
   const tenant: ResolvedPublicTenant | null = useMemo(() => {
     const hostname = window.location.hostname
@@ -54,6 +68,18 @@ export function PublicTenantProvider({ children }: { children: ReactNode }) {
   }, [branchCode, cityCode, data, location.search, organizationSlug])
   const organization = tenant?.organization
   const clinic = tenant?.clinic
+
+  useEffect(() => {
+    if (organization?.regionalSettings.countryCode === 'PK' && !getStoredUiLanguage()) {
+      setLanguagePromptOpen(true)
+    }
+  }, [organization?.id, organization?.regionalSettings.countryCode])
+
+  const selectUiLanguage = useCallback((language: UiLanguage) => {
+    storeUiLanguage(language)
+    setUiLanguage(language)
+    setLanguagePromptOpen(false)
+  }, [])
 
   const submitAppointmentRequest = useCallback(
     async (input: {
@@ -97,11 +123,23 @@ export function PublicTenantProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       data,
-      organization: tenant?.organization,
-      clinic: tenant?.clinic,
+      organization,
+      clinic,
       submitAppointmentRequest,
+      uiLanguage,
+      languagePromptOpen,
+      selectUiLanguage,
+      reopenLanguagePrompt: () => setLanguagePromptOpen(true),
     }),
-    [data, submitAppointmentRequest, tenant],
+    [
+      clinic,
+      data,
+      languagePromptOpen,
+      organization,
+      selectUiLanguage,
+      submitAppointmentRequest,
+      uiLanguage,
+    ],
   )
 
   return (

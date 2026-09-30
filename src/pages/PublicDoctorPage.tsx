@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { DoctorAvatar } from '../components/DoctorAvatar'
+import { LanguagePreference } from '../components/LanguagePreference'
 import { PublicHeader } from '../components/PublicHeader'
 import { usePageMetadata } from '../components/PageMetadata'
 import { formatAvailability, WEEK_DAYS } from '../domain/availability'
@@ -17,6 +18,7 @@ export function PublicDoctorPage() {
     organization,
     clinic: resolvedClinic,
     submitAppointmentRequest,
+    uiLanguage,
   } = usePublicTenant()
   const candidateDoctor = data.practitioners.find(
     (item) =>
@@ -59,7 +61,7 @@ export function PublicDoctorPage() {
     return <Navigate to="/not-found" replace />
 
   const publicContact = getPublicContact(doctor, clinic)
-  const strings = getUiStrings(organization.regionalSettings.locale)
+  const strings = getUiStrings(uiLanguage)
 
   async function submitRequest(event: React.FormEvent) {
     event.preventDefault()
@@ -96,7 +98,7 @@ export function PublicDoctorPage() {
   )
   return (
     <div className="public-site">
-      <PublicHeader organization={organization} homePath={homePath} />
+      <PublicHeader organization={organization} homePath={homePath} language={uiLanguage} />
 
       <main className="doctor-profile-page">
         <Link className="back-link" to={homePath}>
@@ -294,6 +296,7 @@ export function PublicDoctorPage() {
         <span>© {new Date().getFullYear()} {organization.name}</span>
         <span>For emergencies, contact your local emergency service.</span>
       </footer>
+      <LanguagePreference />
     </div>
   )
 }
