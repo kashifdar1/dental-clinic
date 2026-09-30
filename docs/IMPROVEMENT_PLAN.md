@@ -197,7 +197,7 @@ validated before starting the next one.
 5. [x] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
        the governance flags claim this and nothing records it.
 6. [x] **Visit notes per specialty module**; modules are hint stubs today.
-7. [ ] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
+7. [x] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
 8. [ ] **Urdu and RTL**: `ur-PK` is seeded but there is no string table or `dir` handling.
 9. [ ] **Login stub** with membership picker and role-gated routes.
 10. [ ] **SEO prerendering** of public routes once the public tree is decoupled (Phase 1).

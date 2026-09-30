@@ -1,4 +1,9 @@
 import Papa from 'papaparse'
+import {
+  MINUTE_OPTIONS,
+  WEEK_DAYS,
+  validateAvailability,
+} from './availability'
 import { allSpecialtyOptions } from './specialtyRegistry'
 import type {
   Clinic,
@@ -14,6 +19,13 @@ export const PRACTITIONER_IMPORT_HEADERS = [
   'phone',
   'specialties',
   'active',
+  'qualifications',
+  'languages',
+  'availability_days',
+  'availability_start',
+  'availability_end',
+  'accepting_patients',
+  'photo_url',
 ] as const
 
 interface RawImportRow {
@@ -23,6 +35,13 @@ interface RawImportRow {
   phone?: string
   specialties?: string
   active?: string
+  qualifications?: string
+  languages?: string
+  availability_days?: string
+  availability_start?: string
+  availability_end?: string
+  accepting_patients?: string
+  photo_url?: string
 }
 
 export interface PractitionerImportPreviewRow {
@@ -51,6 +70,38 @@ function parseActive(value: string): boolean | undefined {
   if (['true', 'yes', '1', 'active'].includes(normalized)) return true
   if (['false', 'no', '0', 'inactive'].includes(normalized)) return false
   return undefined
+}
+
+function parseList(value: string | undefined): string[] | undefined {
+  const items = value?.split(/[|;]/).map((item) => item.trim()).filter(Boolean)
+  return items && items.length > 0 ? items : undefined
+}
+
+function parseAvailability(
+  daysValue: string | undefined,
+  startTime: string | undefined,
+  endTime: string | undefined,
+): { value?: PractitionerImportInput['availability']; error?: string } {
+  if (!daysValue && !startTime && !endTime) return {}
+  const days = (daysValue ?? '')
+    .split(/[|;]/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean)
+    .map((item) => {
+      const numeric = Number(item)
+      if (!Number.isNaN(numeric) && numeric >= 0 && numeric <= 6) return numeric
+      return WEEK_DAYS.find((day) => day.label.toLowerCase() === item || day.short.toLowerCase() === item)?.value
+    })
+    .filter((day): day is number => day !== undefined)
+  const availability = {
+    days: [...new Set(days)],
+    startTime: startTime?.trim() ?? '',
+    endTime: endTime?.trim() ?? '',
+  }
+  if (!availability.days.length || !MINUTE_OPTIONS.some((minute) => availability.startTime.endsWith(minute)) || !MINUTE_OPTIONS.some((minute) => availability.endTime.endsWith(minute))) {
+    return { error: 'Availability requires valid days and HH:00/15/30/45 times' }
+  }
+  return { value: validateAvailability(availability) ? undefined : availability, error: validateAvailability(availability) ?? undefined }
 }
 
 function resolveSpecialties(value: string): {
@@ -102,9 +153,8 @@ export function parsePractitionerCsv(
     (error) => `CSV row ${(error.row ?? 0) + 2}: ${error.message}`,
   )
   const fields = result.meta.fields ?? []
-  const missingHeaders = PRACTITIONER_IMPORT_HEADERS.filter(
-    (header) => !fields.includes(header),
-  )
+  const requiredHeaders = PRACTITIONER_IMPORT_HEADERS.slice(0, 6)
+  const missingHeaders = requiredHeaders.filter((header) => !fields.includes(header))
   if (missingHeaders.length > 0) {
     fileErrors.push(`Missing columns: ${missingHeaders.join(', ')}`)
   }
@@ -122,6 +172,12 @@ export function parsePractitionerCsv(
     const phone = raw.phone?.trim() ?? ''
     const specialtyResult = resolveSpecialties(raw.specialties ?? '')
     const active = parseActive(raw.active ?? '')
+    const acceptingPatients = parseActive(raw.accepting_patients ?? '')
+    const availability = parseAvailability(
+      raw.availability_days,
+      raw.availability_start,
+      raw.availability_end,
+    )
     const clinic = clinics.find(
       (item) =>
         normalize(item.id) === normalize(clinicValue) ||
@@ -148,6 +204,9 @@ export function parsePractitionerCsv(
       )
     if (active === undefined)
       errors.push('Active must be true/false, yes/no, 1/0, or active/inactive')
+    if (raw.accepting_patients && acceptingPatients === undefined)
+      errors.push('Accepting patients must use the same true/false values as active')
+    if (availability.error) errors.push(availability.error)
 
     const input =
       errors.length === 0 && clinic && active !== undefined
@@ -158,6 +217,11 @@ export function parsePractitionerCsv(
             phone,
             specialties: specialtyResult.ids,
             active,
+            qualifications: parseList(raw.qualifications),
+            languages: parseList(raw.languages),
+            availability: availability.value,
+            acceptingPatients: acceptingPatients ?? true,
+            photoUrl: raw.photo_url?.trim() || undefined,
           }
         : undefined
 
@@ -187,6 +251,43 @@ export function createPractitionerCsvTemplate(clinics: Clinic[]): string {
       phone: '+92 300 000 0000',
       specialties: 'general_medicine|dentistry',
       active: 'true',
+      qualifications: 'MBBS|FCPS',
+      languages: 'English|Urdu',
+      availability_days: 'Mon|Wed|Fri',
+      availability_start: '09:00',
+      availability_end: '17:00',
+      accepting_patients: 'true',
+      photo_url: '',
     },
   ])
+}
+
+export function exportPractitionersCsv(
+  practitioners: Practitioner[],
+  clinics: Clinic[],
+): string {
+  return Papa.unparse(
+    practitioners.map((practitioner) => {
+      const clinic = clinics.find((item) => item.id === practitioner.clinicId)
+      return {
+        clinic: clinic?.name ?? practitioner.clinicId,
+        full_name: practitioner.fullName,
+        email: practitioner.email,
+        phone: practitioner.phone,
+        specialties: practitioner.specialties.join('|'),
+        active: practitioner.active,
+        qualifications: practitioner.qualifications?.join('|') ?? '',
+        languages: practitioner.languages?.join('|') ?? '',
+        availability_days:
+          practitioner.availability?.days
+            .map((day) => WEEK_DAYS.find((item) => item.value === day)?.short)
+            .filter(Boolean)
+            .join('|') ?? '',
+        availability_start: practitioner.availability?.startTime ?? '',
+        availability_end: practitioner.availability?.endTime ?? '',
+        accepting_patients: practitioner.acceptingPatients ?? false,
+        photo_url: practitioner.photoUrl ?? '',
+      }
+    }),
+  )
 }

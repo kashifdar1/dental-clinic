@@ -1,6 +1,7 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
 import {
   createPractitionerCsvTemplate,
+  exportPractitionersCsv,
   parsePractitionerCsv,
   type PractitionerImportPreview,
 } from '../domain/practitionerImport'
@@ -41,6 +42,16 @@ export function PractitionerImportPanel() {
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = `${organization.slug}-practitioners-template.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function downloadExport() {
+    const csv = exportPractitionersCsv(organizationPractitioners, clinics)
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${organization.slug}-practitioners.csv`
     anchor.click()
     URL.revokeObjectURL(url)
   }
@@ -102,9 +113,14 @@ export function PractitionerImportPanel() {
             {organization.name}. CSV is validated before anything is saved.
           </p>
         </div>
-        <button className="btn secondary" type="button" onClick={downloadTemplate}>
-          Download CSV template
-        </button>
+        <div className="btn-row">
+          <button className="btn secondary" type="button" onClick={downloadTemplate}>
+            Download CSV template
+          </button>
+          <button className="btn ghost" type="button" onClick={downloadExport}>
+            Export doctors
+          </button>
+        </div>
       </div>
 
       <div className="field">
