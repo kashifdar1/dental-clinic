@@ -101,7 +101,7 @@ This frontend is shaped so a backend can replace the local repository without re
 3. **API** — versioned REST or tRPC; never trust client-side filtering alone.
 4. **Audit & PHI** — immutable audit log, encryption at rest, secrets in a vault, backups + restore drills.
 5. **Observability** — structured logs, metrics, tracing, error reporting (e.g. Sentry).
-6. **Deploy** — static frontend on CDN (Cloudflare/Vercel/Netlify) + API on containers or serverless; CI for lint/test/build.
+6. **Deploy** — static frontend on CDN (Cloudflare/Vercel/Netlify) + API on containers or serverless; CI for lint/test/build is defined in `.github/workflows/ci.yml`.
 7. **Compliance** — treat clinical data as regulated (HIPAA/local equivalents); BAA with vendors, access reviews, retention policies.
 
 ## Important limitation
