@@ -1,11 +1,24 @@
+import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { SaveStatus } from '../components/SaveStatus'
 import { SPECIALTY_MODULES, slugToSpecialty } from '../domain/specialtyRegistry'
-import { useTenant } from '../domain/TenantContext'
+import { useTenant, type MutationResult } from '../domain/TenantContext'
 
 export function SpecialtyModulePage() {
   const { moduleSlug = '' } = useParams()
   const specialtyId = slugToSpecialty[moduleSlug]
-  const { practitioners, patients, activeModules } = useTenant()
+  const {
+    practitioners,
+    patients,
+    activeModules,
+    visitNotes,
+    saveVisitNote,
+    status,
+  } = useTenant()
+  const [selectedPatientId, setSelectedPatientId] = useState('')
+  const [selectedPractitionerId, setSelectedPractitionerId] = useState('')
+  const [content, setContent] = useState('')
+  const [result, setResult] = useState<MutationResult | null>(null)
 
   if (!specialtyId) {
     return <Navigate to="/not-found" replace />
@@ -39,6 +52,32 @@ export function SpecialtyModulePage() {
   const relatedPatients = patients.filter((patient) =>
     modulePractitioners.some((p) => p.id === patient.assignedPractitionerId),
   )
+  const moduleNotes = visitNotes.filter(
+    (note) =>
+      note.specialtyId === specialtyId &&
+      relatedPatients.some((patient) => patient.id === note.patientId),
+  )
+
+  async function submitVisitNote(event: FormEvent) {
+    event.preventDefault()
+    const patientId = selectedPatientId || relatedPatients[0]?.id
+    const practitionerId =
+      selectedPractitionerId || modulePractitioners[0]?.id
+    if (!patientId || !practitionerId) {
+      setResult({ ok: false, message: 'Select a patient and practitioner.' })
+      return
+    }
+    const nextResult = await saveVisitNote({
+      patientId,
+      practitionerId,
+      specialtyId,
+      content,
+    })
+    setResult(nextResult)
+    if (nextResult.ok) {
+      setContent('')
+    }
+  }
 
   return (
     <div>
@@ -111,6 +150,89 @@ export function SpecialtyModulePage() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="panel stack-section-sm">
+        <div className="page-header">
+          <div>
+            <h2>Visit notes</h2>
+            <p className="muted">Record a note for this specialty module.</p>
+          </div>
+        </div>
+        {relatedPatients.length === 0 ? (
+          <div className="empty">Assign a patient to a module practitioner to add a visit note.</div>
+        ) : (
+          <form className="form-grid" onSubmit={submitVisitNote}>
+            <div className="field">
+              <label htmlFor="visit-note-patient">Patient</label>
+              <select
+                id="visit-note-patient"
+                value={selectedPatientId || relatedPatients[0].id}
+                onChange={(event) => setSelectedPatientId(event.target.value)}
+              >
+                {relatedPatients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="visit-note-practitioner">Practitioner</label>
+              <select
+                id="visit-note-practitioner"
+                value={selectedPractitionerId || modulePractitioners[0]?.id}
+                onChange={(event) => setSelectedPractitionerId(event.target.value)}
+              >
+                {modulePractitioners.map((practitioner) => (
+                  <option key={practitioner.id} value={practitioner.id}>
+                    {practitioner.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field full">
+              <label htmlFor="visit-note-content">Note</label>
+              <textarea
+                id="visit-note-content"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="Record findings, plan, or follow-up."
+                required
+              />
+            </div>
+            <div className="btn-row full">
+              <button className="btn" type="submit">
+                Save visit note
+              </button>
+            </div>
+            <SaveStatus status={status} result={result} />
+          </form>
+        )}
+        {moduleNotes.length > 0 ? (
+          <div className="table-wrap stack-section-sm">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Practitioner</th>
+                  <th>Note</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {moduleNotes.map((note) => (
+                  <tr key={note.id}>
+                    <td>{patients.find((patient) => patient.id === note.patientId)?.fullName ?? '—'}</td>
+                    <td>{practitioners.find((practitioner) => practitioner.id === note.practitionerId)?.fullName ?? '—'}</td>
+                    <td>{note.content}</td>
+                    <td>{new Date(note.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
     </div>
   )

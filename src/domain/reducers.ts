@@ -9,6 +9,7 @@ import type {
   Practitioner,
   PractitionerImportInput,
   RegionalSettings,
+  SpecialtyId,
   TenantContext,
 } from './types'
 
@@ -129,6 +130,48 @@ export function updateAppointmentRequestStatus(
     request.clinicId,
   )
   request.status = status
+  return next
+}
+
+export function createVisitNote(
+  data: AppData,
+  context: TenantContext,
+  input: {
+    patientId: string
+    practitionerId: string
+    specialtyId: SpecialtyId
+    content: string
+  },
+): AppData {
+  const next = clone(data)
+  const patient = next.patients.find(
+    (item) =>
+      item.id === input.patientId &&
+      item.organizationId === context.organizationId &&
+      item.clinicId === context.clinicId,
+  )
+  const practitioner = next.practitioners.find(
+    (item) =>
+      item.id === input.practitionerId &&
+      item.organizationId === context.organizationId &&
+      item.clinicId === context.clinicId &&
+      item.active &&
+      item.specialties.includes(input.specialtyId),
+  )
+  if (!patient) throw new Error('Patient does not belong to the selected clinic')
+  if (!practitioner) throw new Error('Practitioner is not assigned to this specialty')
+  if (!input.content.trim()) throw new Error('Visit note content is required')
+
+  next.visitNotes.push({
+    id: createId('visit'),
+    organizationId: context.organizationId,
+    clinicId: context.clinicId,
+    patientId: input.patientId,
+    practitionerId: input.practitionerId,
+    specialtyId: input.specialtyId,
+    content: input.content.trim(),
+    createdAt: new Date().toISOString(),
+  })
   return next
 }
 

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { DEMO_DATA } from './seed'
 import {
   createAppointmentRequest,
+  createVisitNote,
   updateClinicRouting,
   updateAppointmentRequestStatus,
   upsertPatient,
@@ -151,5 +152,29 @@ describe('pure reducers', () => {
         'booked',
       ),
     ).toThrow('Tenant isolation')
+  })
+
+  it('creates a specialty visit note only for assigned module practitioners', () => {
+    const data = cloneDemo()
+    const next = createVisitNote(data, data.context, {
+      patientId: 'pat_a1',
+      practitionerId: 'prac_a1',
+      specialtyId: 'general_medicine',
+      content: 'Reviewed vitals and updated care plan.',
+    })
+
+    expect(next.visitNotes[0]).toMatchObject({
+      patientId: 'pat_a1',
+      specialtyId: 'general_medicine',
+      content: 'Reviewed vitals and updated care plan.',
+    })
+    expect(() =>
+      createVisitNote(data, data.context, {
+        patientId: 'pat_a1',
+        practitionerId: 'prac_a1',
+        specialtyId: 'dentistry',
+        content: 'Wrong module',
+      }),
+    ).toThrow('Practitioner is not assigned to this specialty')
   })
 })

@@ -196,7 +196,7 @@ validated before starting the next one.
 4. [x] **Doctor photos** (data URL in the demo store) with an initials avatar fallback.
 5. [x] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
        the governance flags claim this and nothing records it.
-6. [ ] **Visit notes per specialty module**; modules are hint stubs today.
+6. [x] **Visit notes per specialty module**; modules are hint stubs today.
 7. [ ] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
 8. [ ] **Urdu and RTL**: `ur-PK` is seeded but there is no string table or `dir` handling.
 9. [ ] **Login stub** with membership picker and role-gated routes.

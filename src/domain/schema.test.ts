@@ -40,4 +40,15 @@ describe('app data schema', () => {
     expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(migrated.auditEvents).toEqual([])
   })
+
+  it('migrates version 3 data with an empty visit-note log', () => {
+    const versionThree = structuredClone(DEMO_DATA) as unknown as Record<string, unknown>
+    versionThree.schemaVersion = 3
+    delete versionThree.visitNotes
+
+    const migrated = migrate(versionThree)
+
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect(migrated.visitNotes).toEqual([])
+  })
 })

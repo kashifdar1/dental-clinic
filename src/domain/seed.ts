@@ -277,6 +277,7 @@ export const DEMO_DATA: AppData = {
   ],
   appointmentRequests: [],
   auditEvents: [],
+  visitNotes: [],
   memberships: [
     {
       id: 'mem_aurora_admin',

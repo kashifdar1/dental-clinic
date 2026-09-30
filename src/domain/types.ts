@@ -135,6 +135,17 @@ export interface AuditEvent {
   occurredAt: string
 }
 
+export interface VisitNote {
+  id: string
+  organizationId: string
+  clinicId: string
+  patientId: string
+  practitionerId: string
+  specialtyId: SpecialtyId
+  content: string
+  createdAt: string
+}
+
 export interface Membership {
   id: string
   organizationId: string
@@ -158,6 +169,7 @@ export interface AppData {
   patients: Patient[]
   appointmentRequests: AppointmentRequest[]
   auditEvents: AuditEvent[]
+  visitNotes: VisitNote[]
   memberships: Membership[]
   context: TenantContext
 }
