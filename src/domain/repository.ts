@@ -10,9 +10,11 @@ import type {
 import { modulesForSpecialties } from './specialtyRegistry'
 import { migrate } from './schema'
 export {
+  createAppointmentRequest,
   importPractitioners,
   setTenantContext,
   updateClinicRouting,
+  updateAppointmentRequestStatus,
   updateOrganizationSettings,
   upsertPatient,
   upsertPractitioner,

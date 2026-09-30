@@ -1,7 +1,7 @@
 import type { AppData } from './types'
 
 export const DEMO_DATA: AppData = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   organizations: [
     {
       id: 'org_aurora',
@@ -275,6 +275,7 @@ export const DEMO_DATA: AppData = {
       assignedPractitionerId: 'prac_h2',
     },
   ],
+  appointmentRequests: [],
   memberships: [
     {
       id: 'mem_aurora_admin',

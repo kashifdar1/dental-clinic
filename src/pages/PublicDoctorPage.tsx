@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
 import { usePageMetadata } from '../components/PageMetadata'
 import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
-import { formatAvailability } from '../domain/availability'
+import { formatAvailability, WEEK_DAYS } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { SPECIALTY_MODULES } from '../domain/specialtyRegistry'
@@ -10,7 +11,12 @@ import { usePublicTenant } from '../public/PublicTenantContext'
 
 export function PublicDoctorPage() {
   const { organizationSlug, doctorId } = useParams()
-  const { data, organization, clinic: resolvedClinic } = usePublicTenant()
+  const {
+    data,
+    organization,
+    clinic: resolvedClinic,
+    submitAppointmentRequest,
+  } = usePublicTenant()
   const candidateDoctor = data.practitioners.find(
     (item) =>
       item.id === doctorId &&
@@ -29,6 +35,15 @@ export function PublicDoctorPage() {
       item.clinicId === clinic?.id &&
       item.active,
   )
+  const [requestOpen, setRequestOpen] = useState(false)
+  const [requestResult, setRequestResult] = useState<string | null>(null)
+  const [requestForm, setRequestForm] = useState({
+    patientName: '',
+    phone: '',
+    email: '',
+    preferredDay: '',
+    message: '',
+  })
 
   usePageMetadata(
     doctor && organization
@@ -43,6 +58,31 @@ export function PublicDoctorPage() {
     return <Navigate to="/not-found" replace />
 
   const publicContact = getPublicContact(doctor, clinic)
+
+  async function submitRequest(event: React.FormEvent) {
+    event.preventDefault()
+    if (!doctor) return
+    const result = await submitAppointmentRequest({
+      practitionerId: doctor.id,
+      patientName: requestForm.patientName,
+      phone: requestForm.phone,
+      email: requestForm.email || undefined,
+      preferredDay: requestForm.preferredDay
+        ? Number(requestForm.preferredDay)
+        : undefined,
+      message: requestForm.message || undefined,
+    })
+    setRequestResult(result.ok ? 'Request sent to the clinic.' : result.message)
+    if (result.ok) {
+      setRequestForm({
+        patientName: '',
+        phone: '',
+        email: '',
+        preferredDay: '',
+        message: '',
+      })
+    }
+  }
 
   const homePath = buildPublicDemoPath(
     organization,
@@ -96,6 +136,9 @@ export function PublicDoctorPage() {
                   Email clinic
                 </a>
               ) : null}
+              <button className="btn secondary" type="button" onClick={() => setRequestOpen(true)}>
+                Request appointment
+              </button>
             </div>
           </div>
         </section>
@@ -146,6 +189,103 @@ export function PublicDoctorPage() {
             </div>
           </section>
         </div>
+
+        {requestOpen ? (
+          <section className="panel profile-section appointment-request">
+            <div className="page-header">
+              <div>
+                <h2>Request an appointment</h2>
+                <p className="muted">
+                  Share your details and the clinic will contact you to confirm a time.
+                </p>
+              </div>
+              <button
+                className="btn ghost"
+                type="button"
+                onClick={() => setRequestOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <form className="form-grid" onSubmit={submitRequest}>
+              <div className="field">
+                <label htmlFor="requestPatientName">Your name</label>
+                <input
+                  id="requestPatientName"
+                  value={requestForm.patientName}
+                  onChange={(event) =>
+                    setRequestForm({ ...requestForm, patientName: event.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="requestPhone">Phone</label>
+                <input
+                  id="requestPhone"
+                  value={requestForm.phone}
+                  onChange={(event) =>
+                    setRequestForm({ ...requestForm, phone: event.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="requestEmail">Email</label>
+                <input
+                  id="requestEmail"
+                  type="email"
+                  value={requestForm.email}
+                  onChange={(event) =>
+                    setRequestForm({ ...requestForm, email: event.target.value })
+                  }
+                />
+              </div>
+              {doctor.availability ? (
+                <div className="field">
+                  <label htmlFor="requestPreferredDay">Preferred day</label>
+                  <select
+                    id="requestPreferredDay"
+                    value={requestForm.preferredDay}
+                    onChange={(event) =>
+                      setRequestForm({ ...requestForm, preferredDay: event.target.value })
+                    }
+                  >
+                    <option value="">Any available day</option>
+                    {WEEK_DAYS.filter((day) => doctor.availability?.days.includes(day.value)).map(
+                      (day) => (
+                        <option key={day.value} value={day.value}>
+                          {day.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+              ) : null}
+              <div className="field full">
+                <label htmlFor="requestMessage">Message</label>
+                <textarea
+                  id="requestMessage"
+                  value={requestForm.message}
+                  onChange={(event) =>
+                    setRequestForm({ ...requestForm, message: event.target.value })
+                  }
+                  placeholder="Tell the clinic anything helpful about your request."
+                />
+              </div>
+              <div className="btn-row full">
+                <button className="btn" type="submit">
+                  Send request
+                </button>
+              </div>
+              {requestResult ? (
+                <div className="import-message full" role="status">
+                  {requestResult}
+                </div>
+              ) : null}
+            </form>
+          </section>
+        ) : null}
       </main>
 
       <footer className="public-footer">

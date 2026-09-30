@@ -11,6 +11,9 @@ import { PublicTenantProvider } from './public/PublicTenantContext'
 const DashboardPage = lazy(async () => ({
   default: (await import('./pages/DashboardPage')).DashboardPage,
 }))
+const AppointmentRequestsPage = lazy(async () => ({
+  default: (await import('./pages/AppointmentRequestsPage')).AppointmentRequestsPage,
+}))
 const OrganizationSettingsPage = lazy(async () => ({
   default: (await import('./pages/OrganizationSettingsPage')).OrganizationSettingsPage,
 }))
@@ -75,6 +78,7 @@ export default function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="practitioners" element={<PractitionersPage />} />
                 <Route path="patients" element={<PatientsPage />} />
+                <Route path="appointments" element={<AppointmentRequestsPage />} />
                 <Route path="settings" element={<OrganizationSettingsPage />} />
                 <Route path="modules/:moduleSlug" element={<SpecialtyModulePage />} />
               </Route>

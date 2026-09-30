@@ -190,7 +190,7 @@ validated before starting the next one.
 
 1. [x] **Clinic public profile editor** in settings: tagline, hero copy, hero image, address,
        phone, hours, WhatsApp and map links. Replaces the hard-coded hero and contact strings.
-2. [ ] **Appointment request flow**: form on the doctor profile offering days from
+2. [x] **Appointment request flow**: form on the doctor profile offering days from
        `AvailabilityWindow`; admin inbox with `new | contacted | booked | declined`.
 3. [ ] **Directory search and "available today"** using the window and clinic timezone.
 4. [ ] **Doctor photos** (data URL in the demo store) with an initials avatar fallback.

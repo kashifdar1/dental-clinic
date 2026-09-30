@@ -1,6 +1,7 @@
 import { normalizeHostname } from './publicTenantResolver'
 import type {
   AppData,
+  AppointmentRequestStatus,
   Clinic,
   GovernanceSettings,
   HostingSettings,
@@ -69,6 +70,66 @@ function assertAssignedPractitioner(
   ) {
     throw new Error('Assigned practitioner must belong to the selected clinic')
   }
+}
+
+export function createAppointmentRequest(
+  data: AppData,
+  input: {
+    organizationId: string
+    clinicId: string
+    practitionerId: string
+    patientName: string
+    phone: string
+    email?: string
+    preferredDay?: number
+    message?: string
+  },
+): AppData {
+  const next = clone(data)
+  const practitioner = next.practitioners.find(
+    (item) =>
+      item.id === input.practitionerId &&
+      item.organizationId === input.organizationId &&
+      item.clinicId === input.clinicId &&
+      item.active,
+  )
+  if (!practitioner) throw new Error('Practitioner is not available at this clinic')
+  if (!input.patientName.trim() || !input.phone.trim()) {
+    throw new Error('Patient name and phone are required')
+  }
+  next.appointmentRequests.push({
+    id: createId('request'),
+    organizationId: input.organizationId,
+    clinicId: input.clinicId,
+    practitionerId: input.practitionerId,
+    patientName: input.patientName.trim(),
+    phone: input.phone.trim(),
+    email: input.email?.trim() || undefined,
+    preferredDay: input.preferredDay,
+    message: input.message?.trim() || undefined,
+    status: 'new',
+    createdAt: new Date().toISOString(),
+  })
+  return next
+}
+
+export function updateAppointmentRequestStatus(
+  data: AppData,
+  context: TenantContext,
+  requestId: string,
+  status: AppointmentRequestStatus,
+): AppData {
+  const next = clone(data)
+  const request = next.appointmentRequests.find((item) => item.id === requestId)
+  if (!request) throw new Error('Appointment request not found')
+  assertTenantMatch(
+    context.organizationId,
+    context.clinicId,
+    request.organizationId,
+    request.clinicId,
+  )
+  request.status = status
+  return next
 }
 
 export function upsertPractitioner(

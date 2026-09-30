@@ -105,6 +105,26 @@ export interface Patient {
   active?: boolean
 }
 
+export type AppointmentRequestStatus =
+  | 'new'
+  | 'contacted'
+  | 'booked'
+  | 'declined'
+
+export interface AppointmentRequest {
+  id: string
+  organizationId: string
+  clinicId: string
+  practitionerId: string
+  patientName: string
+  phone: string
+  email?: string
+  preferredDay?: number
+  message?: string
+  status: AppointmentRequestStatus
+  createdAt: string
+}
+
 export interface Membership {
   id: string
   organizationId: string
@@ -126,6 +146,7 @@ export interface AppData {
   clinics: Clinic[]
   practitioners: Practitioner[]
   patients: Patient[]
+  appointmentRequests: AppointmentRequest[]
   memberships: Membership[]
   context: TenantContext
 }

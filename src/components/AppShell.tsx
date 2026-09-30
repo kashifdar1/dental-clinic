@@ -48,6 +48,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Patients
             </NavLink>
           ) : null}
+          {can(membership, 'managePatients') ? (
+            <NavLink
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              to="/admin/appointments"
+            >
+              Appointment requests
+            </NavLink>
+          ) : null}
           {can(membership, 'manageOrganization') ? (
             <NavLink
               className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEMO_DATA } from './seed'
 import {
+  createAppointmentRequest,
   updateClinicRouting,
+  updateAppointmentRequestStatus,
   upsertPatient,
   upsertPractitioner,
 } from './reducers'
@@ -115,5 +117,39 @@ describe('pure reducers', () => {
     })
 
     expect(next.practitioners.at(-1)?.availabilitySummary).toBeUndefined()
+  })
+
+  it('creates and updates a tenant-scoped appointment request', () => {
+    const data = cloneDemo()
+    const created = createAppointmentRequest(data, {
+      organizationId: data.context.organizationId,
+      clinicId: data.context.clinicId,
+      practitionerId: 'prac_a1',
+      patientName: 'New patient',
+      phone: '+92 300 000 0000',
+      preferredDay: 1,
+    })
+    const request = created.appointmentRequests[0]
+    expect(request.status).toBe('new')
+
+    const updated = updateAppointmentRequestStatus(
+      created,
+      created.context,
+      request.id,
+      'contacted',
+    )
+    expect(updated.appointmentRequests[0].status).toBe('contacted')
+    expect(() =>
+      updateAppointmentRequestStatus(
+        updated,
+        {
+          organizationId: 'org_harbor',
+          clinicId: 'clinic_harbor_downtown',
+          membershipId: 'mem_harbor_admin',
+        },
+        request.id,
+        'booked',
+      ),
+    ).toThrow('Tenant isolation')
   })
 })

@@ -1,6 +1,6 @@
 import type { AppData } from './types'
 
-export const CURRENT_SCHEMA_VERSION = 1
+export const CURRENT_SCHEMA_VERSION = 2
 
 type RecordValue = Record<string, unknown>
 
@@ -25,6 +25,7 @@ function isAppData(value: unknown): value is AppData {
     !Array.isArray(value.clinics) ||
     !Array.isArray(value.practitioners) ||
     !Array.isArray(value.patients) ||
+    !Array.isArray(value.appointmentRequests) ||
     !Array.isArray(value.memberships) ||
     !isRecord(value.context) ||
     !hasStringFields(value.context, [
@@ -72,6 +73,18 @@ function isAppData(value: unknown): value is AppData {
         'phone',
       ]),
     ) &&
+    value.appointmentRequests.every((item) =>
+      hasStringFields(item, [
+        'id',
+        'organizationId',
+        'clinicId',
+        'practitionerId',
+        'patientName',
+        'phone',
+        'status',
+        'createdAt',
+      ]),
+    ) &&
     value.memberships.every((item) =>
       hasStringFields(item, [
         'id',
@@ -89,19 +102,26 @@ export function migrate(raw: unknown): AppData {
     throw new Error('Stored app data must be an object')
   }
 
-  const version = raw.schemaVersion ?? 0
+  let version = raw.schemaVersion ?? 0
+  let migrated: RecordValue = raw
   if (version === 0) {
-    const migrated = { ...raw, schemaVersion: CURRENT_SCHEMA_VERSION }
-    if (isAppData(migrated)) return structuredClone(migrated)
-    throw new Error('Stored app data failed validation')
+    version = 1
+    migrated = { ...migrated, schemaVersion: version }
   }
-
+  if (version === 1) {
+    version = CURRENT_SCHEMA_VERSION
+    migrated = {
+      ...migrated,
+      schemaVersion: version,
+      appointmentRequests: [],
+    }
+  }
   if (version !== CURRENT_SCHEMA_VERSION) {
     throw new Error(`Unsupported app data schema version: ${String(version)}`)
   }
-  if (!isAppData(raw)) {
+  if (!isAppData(migrated)) {
     throw new Error('Stored app data failed validation')
   }
 
-  return structuredClone(raw)
+  return structuredClone(migrated)
 }
