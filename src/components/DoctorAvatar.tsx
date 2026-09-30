@@ -48,9 +48,13 @@ export function DoctorAvatar({
     <div
       className={`${className} doctor-avatar-fallback`}
       aria-label={practitioner.fullName}
-      style={{ backgroundImage: `url(${CARD_BACKGROUNDS[specialtyId]})` }}
     >
-      {initials(practitioner.fullName)}
+      <img
+        className="doctor-avatar-background"
+        src={CARD_BACKGROUNDS[specialtyId]}
+        alt=""
+      />
+      <span>{initials(practitioner.fullName)}</span>
     </div>
   )
 }
