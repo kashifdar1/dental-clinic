@@ -11,6 +11,7 @@ export function OrganizationSettingsPage() {
     status,
     saveOrganizationSettings,
     saveClinicRouting,
+    createClinic,
   } = useTenant()
   const [hosting, setHosting] = useState(organization.hostingSettings)
   const [clinicRouting, setClinicRouting] = useState({
@@ -32,6 +33,17 @@ export function OrganizationSettingsPage() {
     organization.governanceSettings,
   )
   const [result, setResult] = useState<MutationResult | null>(null)
+  const [clinicResult, setClinicResult] = useState<MutationResult | null>(null)
+  const [newClinic, setNewClinic] = useState({
+    name: '',
+    city: '',
+    cityCode: '',
+    branchCode: '',
+    slug: '',
+    timezone: clinic.timezone,
+    phone: '',
+    email: '',
+  })
 
   const hostingMode = organization.hostingSettings.mode
   const primaryDomain = organization.hostingSettings.primaryDomain
@@ -121,6 +133,28 @@ export function OrganizationSettingsPage() {
       return
     }
     setResult({ ok: true })
+  }
+
+  async function submitNewClinic(event: FormEvent) {
+    event.preventDefault()
+    const nextResult = await createClinic({
+      ...newClinic,
+      phone: newClinic.phone || undefined,
+      email: newClinic.email || undefined,
+    })
+    setClinicResult(nextResult)
+    if (nextResult.ok) {
+      setNewClinic({
+        name: '',
+        city: '',
+        cityCode: '',
+        branchCode: '',
+        slug: '',
+        timezone: clinic.timezone,
+        phone: '',
+        email: '',
+      })
+    }
   }
 
   return (
@@ -512,6 +546,55 @@ export function OrganizationSettingsPage() {
         </div>
         <SaveStatus status={status} result={result} />
       </form>
+
+      <section className="panel stack-section">
+        <div className="page-header">
+          <div>
+            <h2>Add clinic</h2>
+            <p className="muted">
+              Create another clinic under {organization.name}. It will appear in the clinic switcher.
+            </p>
+          </div>
+        </div>
+        <form className="form-grid" onSubmit={submitNewClinic}>
+          <div className="field">
+            <label htmlFor="newClinicName">Clinic name</label>
+            <input id="newClinicName" value={newClinic.name} onChange={(event) => setNewClinic({ ...newClinic, name: event.target.value })} required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicCity">City</label>
+            <input id="newClinicCity" value={newClinic.city} onChange={(event) => setNewClinic({ ...newClinic, city: event.target.value })} required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicCityCode">City code</label>
+            <input id="newClinicCityCode" value={newClinic.cityCode} onChange={(event) => setNewClinic({ ...newClinic, cityCode: event.target.value })} placeholder="lhr" required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicBranchCode">Branch code</label>
+            <input id="newClinicBranchCode" value={newClinic.branchCode} onChange={(event) => setNewClinic({ ...newClinic, branchCode: event.target.value })} placeholder="02" required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicSlug">Public slug</label>
+            <input id="newClinicSlug" value={newClinic.slug} onChange={(event) => setNewClinic({ ...newClinic, slug: event.target.value })} placeholder="dha" required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicTimezone">Timezone</label>
+            <input id="newClinicTimezone" value={newClinic.timezone} onChange={(event) => setNewClinic({ ...newClinic, timezone: event.target.value })} placeholder="Asia/Karachi" required />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicPhone">Phone</label>
+            <input id="newClinicPhone" value={newClinic.phone} onChange={(event) => setNewClinic({ ...newClinic, phone: event.target.value })} />
+          </div>
+          <div className="field">
+            <label htmlFor="newClinicEmail">Email</label>
+            <input id="newClinicEmail" type="email" value={newClinic.email} onChange={(event) => setNewClinic({ ...newClinic, email: event.target.value })} />
+          </div>
+          <div className="btn-row full">
+            <button className="btn" type="submit">Add clinic</button>
+          </div>
+          <SaveStatus status={status} result={clinicResult} />
+        </form>
+      </section>
     </div>
   )
 }

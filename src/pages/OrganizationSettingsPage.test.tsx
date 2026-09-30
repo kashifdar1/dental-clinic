@@ -48,6 +48,8 @@ describe('OrganizationSettingsPage', () => {
     expect(screen.getByLabelText('Public hero copy')).toBeInTheDocument()
     expect(screen.getByLabelText('Hero image URL')).toBeInTheDocument()
     expect(screen.getByLabelText('WhatsApp URL')).toBeInTheDocument()
+    expect(screen.getByLabelText('Clinic name')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add clinic' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Save organization settings' }))
 

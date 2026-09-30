@@ -10,6 +10,7 @@ import type {
 import { modulesForSpecialties } from './specialtyRegistry'
 import { migrate } from './schema'
 export {
+  createClinic,
   createVisitNote,
   createAppointmentRequest,
   importPractitioners,

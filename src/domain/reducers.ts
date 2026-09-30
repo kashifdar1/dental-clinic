@@ -344,6 +344,71 @@ export function upsertPatient(
   return next
 }
 
+export function createClinic(
+  data: AppData,
+  context: TenantContext,
+  input: {
+    name: string
+    city: string
+    cityCode: string
+    branchCode: string
+    slug: string
+    timezone: string
+    phone?: string
+    email?: string
+  },
+): AppData {
+  const next = clone(data)
+  const membership = next.memberships.find((item) => item.id === context.membershipId)
+  if (!membership || membership.organizationId !== context.organizationId) {
+    throw new Error('Organization membership not found')
+  }
+  const name = input.name.trim()
+  const city = input.city.trim()
+  const cityCode = input.cityCode.trim().toLowerCase()
+  const branchCode = input.branchCode.trim().toLowerCase()
+  const slug = input.slug.trim().toLowerCase()
+  const timezone = input.timezone.trim()
+  if (!name || !city || !cityCode || !branchCode || !slug || !timezone) {
+    throw new Error('Clinic name, location, route, and timezone are required')
+  }
+  if (
+    next.clinics.some(
+      (clinic) =>
+        clinic.organizationId === context.organizationId &&
+        clinic.cityCode.toLowerCase() === cityCode &&
+        clinic.branchCode.toLowerCase() === branchCode,
+    )
+  ) {
+    throw new Error('Clinic route is already assigned')
+  }
+  if (
+    next.clinics.some(
+      (clinic) =>
+        clinic.organizationId === context.organizationId &&
+        clinic.slug.toLowerCase() === slug,
+    )
+  ) {
+    throw new Error('Clinic slug is already assigned')
+  }
+
+  const clinicId = createId('clinic')
+  next.clinics.push({
+    id: clinicId,
+    organizationId: context.organizationId,
+    name,
+    city,
+    cityCode,
+    branchCode,
+    slug,
+    timezone,
+    phone: input.phone?.trim() || undefined,
+    email: input.email?.trim() || undefined,
+  })
+  membership.clinicIds = [...new Set([...membership.clinicIds, clinicId])]
+  return next
+}
+
 export function updateOrganizationSettings(
   data: AppData,
   context: TenantContext,

@@ -12,6 +12,7 @@ import {
   getClinicsForOrg,
   getScopedPatients,
   createVisitNote,
+  createClinic,
   getScopedPractitioners,
   importPractitioners,
   loadAppData,
@@ -91,6 +92,16 @@ interface TenantState {
     heroCopy?: string
     heroImageUrl?: string
     whatsappUrl?: string
+  }) => Promise<MutationResult>
+  createClinic: (input: {
+    name: string
+    city: string
+    cityCode: string
+    branchCode: string
+    slug: string
+    timezone: string
+    phone?: string
+    email?: string
   }) => Promise<MutationResult>
   updateAppointmentRequestStatus: (
     requestId: string,
@@ -268,6 +279,24 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     [applyMutation],
   )
 
+  const addClinic = useCallback(
+    (input: {
+      name: string
+      city: string
+      cityCode: string
+      branchCode: string
+      slug: string
+      timezone: string
+      phone?: string
+      email?: string
+    }) =>
+      applyMutation(
+        (current) => createClinic(current, current.context, input),
+        'clinic.created',
+      ),
+    [applyMutation],
+  )
+
   const resetDemo = useCallback(() => {
     void applyMutation(() => structuredClone(DEMO_DATA), 'demo.reset')
   }, [applyMutation])
@@ -313,6 +342,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     savePatient,
     saveOrganizationSettings,
     saveClinicRouting,
+    createClinic: addClinic,
     resetDemo,
     updateAppointmentRequestStatus: changeAppointmentRequestStatus,
     saveVisitNote,

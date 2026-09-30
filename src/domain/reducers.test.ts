@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEMO_DATA } from './seed'
 import {
+  createClinic,
   createAppointmentRequest,
   createVisitNote,
   updateClinicRouting,
@@ -70,6 +71,37 @@ describe('pure reducers', () => {
         slug: 'gulberg',
       }),
     ).toThrow('Clinic slug is already assigned')
+  })
+
+  it('creates a clinic and grants the current membership access', () => {
+    const data = cloneDemo()
+    const next = createClinic(data, data.context, {
+      name: 'Indus DHA Clinic',
+      city: 'Lahore',
+      cityCode: 'lhr',
+      branchCode: '02',
+      slug: 'dha',
+      timezone: 'Asia/Karachi',
+      phone: '+92 42 555 0101',
+    })
+    const created = next.clinics.find((clinic) => clinic.slug === 'dha')
+
+    expect(created?.organizationId).toBe(data.context.organizationId)
+    expect(next.memberships.find((item) => item.id === data.context.membershipId)?.clinicIds).toContain(created?.id)
+  })
+
+  it('rejects a duplicate clinic route when adding a clinic', () => {
+    const data = cloneDemo()
+    expect(() =>
+      createClinic(data, data.context, {
+        name: 'Duplicate route',
+        city: 'Lahore',
+        cityCode: 'lhr',
+        branchCode: '01',
+        slug: 'another',
+        timezone: 'Asia/Karachi',
+      }),
+    ).toThrow('Clinic route is already assigned')
   })
 
   it('stores clinic contact details with routing settings', () => {

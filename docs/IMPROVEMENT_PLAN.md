@@ -188,20 +188,22 @@ validated before starting the next one.
 
 ## Phase 3: features, in priority order
 
-1. [x] **Clinic public profile editor** in settings: tagline, hero copy, hero image, address,
+1. [x] **Clinic onboarding** in settings: create a clinic, validate route uniqueness, and assign
+      it to the current organization membership.
+2. [x] **Clinic public profile editor** in settings: tagline, hero copy, hero image, address,
        phone, hours, WhatsApp and map links. Replaces the hard-coded hero and contact strings.
-2. [x] **Appointment request flow**: form on the doctor profile offering days from
+3. [x] **Appointment request flow**: form on the doctor profile offering days from
        `AvailabilityWindow`; admin inbox with `new | contacted | booked | declined`.
-3. [x] **Directory search and "available today"** using the window and clinic timezone.
-4. [x] **Doctor photos** (data URL in the demo store) with an initials avatar fallback.
-5. [x] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
+4. [x] **Directory search and "available today"** using the window and clinic timezone.
+5. [x] **Doctor photos** (data URL in the demo store) with an initials avatar fallback.
+6. [x] **Audit events** appended on every mutation (`auditEvents: AuditEvent[]` in `AppData`);
        the governance flags claim this and nothing records it.
-6. [x] **Visit notes per specialty module**; modules are hint stubs today.
-7. [x] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
-8. [x] **Urdu and RTL**: `ur-PK` has a public string table; the product intentionally keeps the
+7. [x] **Visit notes per specialty module**; modules are hint stubs today.
+8. [x] **Richer CSV**: qualifications, languages, availability, accepting; plus export.
+9. [x] **Urdu and RTL**: `ur-PK` has a public string table; the product intentionally keeps the
       existing left-to-right layout while translating supported public copy.
-9. [x] **Login stub** with membership picker and role-gated routes.
-10. [x] **SEO prerendering** of public routes once the public tree is decoupled (Phase 1).
+10. [x] **Login stub** with membership picker and role-gated routes.
+11. [x] **SEO prerendering** of public routes once the public tree is decoupled (Phase 1).
 
 ## Deferred on purpose
 
