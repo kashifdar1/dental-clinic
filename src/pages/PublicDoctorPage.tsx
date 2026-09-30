@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { DoctorAvatar } from '../components/DoctorAvatar'
 import { PublicHeader } from '../components/PublicHeader'
 import { usePageMetadata } from '../components/PageMetadata'
-import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
 import { formatAvailability, WEEK_DAYS } from '../domain/availability'
 import { getPublicContact } from '../domain/publicContact'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
@@ -92,8 +92,6 @@ export function PublicDoctorPage() {
   const specialties = doctor.specialties.map(
     (specialtyId) => SPECIALTY_MODULES[specialtyId],
   )
-  const primarySpecialty = doctor.specialties[0] ?? 'general_medicine'
-
   return (
     <div className="public-site">
       <PublicHeader organization={organization} homePath={homePath} />
@@ -104,9 +102,9 @@ export function PublicDoctorPage() {
         </Link>
 
         <section className="doctor-profile-hero">
-          <SpecialtyThumbnail
+          <DoctorAvatar
             className="doctor-profile-thumbnail"
-            specialtyId={primarySpecialty}
+            practitioner={doctor}
           />
           <div className="doctor-profile-title">
             <div className="chip-row">

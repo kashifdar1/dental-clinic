@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { PublicHeader } from '../components/PublicHeader'
+import { DoctorAvatar } from '../components/DoctorAvatar'
 import { usePageMetadata } from '../components/PageMetadata'
-import { SpecialtyThumbnail } from '../components/SpecialtyThumbnail'
+import { isAvailableToday } from '../domain/availability'
 import { buildPublicDemoPath } from '../domain/publicTenantResolver'
 import { allSpecialtyOptions } from '../domain/specialtyRegistry'
 import { usePublicTenant } from '../public/PublicTenantContext'
@@ -12,10 +13,14 @@ export function PublicDirectoryPage() {
   const { data, organization, clinic: resolvedClinic } = usePublicTenant()
   const [clinicId, setClinicId] = useState('all')
   const [specialtyId, setSpecialtyId] = useState<'all' | SpecialtyId>('all')
+  const [search, setSearch] = useState('')
+  const [availableToday, setAvailableToday] = useState(false)
 
   useEffect(() => {
     setClinicId(resolvedClinic?.id ?? 'all')
     setSpecialtyId('all')
+    setSearch('')
+    setAvailableToday(false)
   }, [organization?.id, resolvedClinic?.id])
 
   const clinics = useMemo(
@@ -38,10 +43,32 @@ export function PublicDirectoryPage() {
               doctor.active &&
               (clinicId === 'all' || doctor.clinicId === clinicId) &&
               (specialtyId === 'all' ||
-                doctor.specialties.includes(specialtyId)),
+                doctor.specialties.includes(specialtyId)) &&
+              (() => {
+                const doctorClinic = data.clinics.find(
+                  (clinic) => clinic.id === doctor.clinicId,
+                )
+                const specialtyLabels = doctor.specialties.map(
+                  (id) => allSpecialtyOptions().find((item) => item.id === id)?.label ?? id,
+                )
+                const searchMatches = `${doctor.fullName} ${specialtyLabels.join(' ')} ${doctorClinic?.name ?? ''}`
+                  .toLowerCase()
+                  .includes(search.trim().toLowerCase())
+                return (
+                  searchMatches &&
+                  (!availableToday ||
+                    Boolean(
+                      doctorClinic &&
+                        isAvailableToday(
+                          doctor.availability,
+                          doctorClinic.timezone,
+                        ),
+                    ))
+                )
+              })(),
           )
         : [],
-    [clinicId, data.practitioners, organization, specialtyId],
+    [availableToday, clinicId, data.clinics, data.practitioners, organization, search, specialtyId],
   )
   const specialtyOptions = allSpecialtyOptions().filter((specialty) =>
     data.practitioners.some(
@@ -109,6 +136,15 @@ export function PublicDirectoryPage() {
               <h2>Doctors who listen, explain, and care.</h2>
             </div>
             <div className="directory-filters">
+              <div className="field directory-search">
+                <label htmlFor="public-doctor-search">Search doctors</label>
+                <input
+                  id="public-doctor-search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Name, specialty, or clinic"
+                />
+              </div>
               {!resolvedClinic && clinics.length > 1 ? (
                 <div className="field">
                   <label htmlFor="public-clinic-filter">Clinic</label>
@@ -143,6 +179,14 @@ export function PublicDirectoryPage() {
                   ))}
                 </select>
               </div>
+              <label className="checklist-inline">
+                <input
+                  type="checkbox"
+                  checked={availableToday}
+                  onChange={(event) => setAvailableToday(event.target.checked)}
+                />
+                Available today
+              </label>
             </div>
           </div>
 
@@ -159,13 +203,11 @@ export function PublicDirectoryPage() {
                 const specialties = doctor.specialties.map(
                   (id) => allSpecialtyOptions().find((item) => item.id === id)!,
                 )
-                const primarySpecialty =
-                  doctor.specialties[0] ?? 'general_medicine'
                 return (
                   <article className="doctor-card" key={doctor.id}>
-                    <SpecialtyThumbnail
+                    <DoctorAvatar
                       className="doctor-thumbnail"
-                      specialtyId={primarySpecialty}
+                      practitioner={doctor}
                     />
                     <div className="doctor-card-body">
                       <div className="chip-row">

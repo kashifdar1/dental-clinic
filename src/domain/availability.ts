@@ -97,3 +97,34 @@ export function formatAvailability(window: AvailabilityWindow): string {
     window.endTime,
   )}`
 }
+
+const WEEKDAY_VALUES: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+}
+
+export function getWeekdayInTimeZone(
+  date: Date,
+  timeZone: string,
+): number {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    timeZone,
+  }).format(date)
+  return WEEKDAY_VALUES[weekday] ?? date.getDay()
+}
+
+export function isAvailableToday(
+  availability: AvailabilityWindow | undefined,
+  timeZone: string,
+  date = new Date(),
+): boolean {
+  return Boolean(
+    availability && availability.days.includes(getWeekdayInTimeZone(date, timeZone)),
+  )
+}

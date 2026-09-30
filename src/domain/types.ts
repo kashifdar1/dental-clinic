@@ -86,6 +86,7 @@ export interface Practitioner {
     phone?: string
     email?: string
   }
+  photoUrl?: string
 }
 
 export type PractitionerImportInput = Omit<

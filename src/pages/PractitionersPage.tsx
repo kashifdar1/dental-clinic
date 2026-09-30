@@ -15,6 +15,7 @@ const emptyForm = {
   fullName: '',
   email: '',
   phone: '',
+  photoUrl: '',
   specialties: [] as SpecialtyId[],
   active: true,
   professionalSummary: '',
@@ -55,6 +56,7 @@ export function PractitionersPage() {
       fullName: practitioner.fullName,
       email: practitioner.email,
       phone: practitioner.phone,
+      photoUrl: practitioner.photoUrl ?? '',
       specialties: [...practitioner.specialties],
       active: practitioner.active,
       professionalSummary: practitioner.professionalSummary ?? '',
@@ -94,6 +96,7 @@ export function PractitionersPage() {
       fullName: form.fullName,
       email: form.email,
       phone: form.phone,
+      photoUrl: form.photoUrl || undefined,
       specialties: form.specialties,
       active: form.active,
       professionalSummary: form.professionalSummary,
@@ -122,6 +125,7 @@ export function PractitionersPage() {
       fullName: practitioner.fullName,
       email: practitioner.email,
       phone: practitioner.phone,
+      photoUrl: practitioner.photoUrl,
       specialties: practitioner.specialties,
       active,
       professionalSummary: practitioner.professionalSummary,
@@ -182,6 +186,15 @@ export function PractitionersPage() {
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               required
+            />
+          </div>
+          <div className="field full">
+            <label htmlFor="photoUrl">Profile photo URL</label>
+            <input
+              id="photoUrl"
+              value={form.photoUrl}
+              onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
+              placeholder="https://example.com/doctor.jpg"
             />
           </div>
           <div className="field full">
