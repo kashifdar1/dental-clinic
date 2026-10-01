@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { AvailabilityDialog } from '../components/AvailabilityDialog'
 import { PractitionerImportPanel } from '../components/PractitionerImportPanel'
 import { SaveStatus } from '../components/SaveStatus'
@@ -24,6 +24,8 @@ const emptyForm = {
   availability: null as AvailabilityWindow | null,
   acceptingPatients: true,
 }
+
+const MAX_PHOTO_BYTES = 1024 * 1024
 
 export function PractitionersPage() {
   const { clinic, practitioners, savePractitioner, activeModules, status } = useTenant()
@@ -77,6 +79,30 @@ export function PractitionersPage() {
           : [...current.specialties, id],
       }
     })
+  }
+
+  function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Choose an image file.')
+      event.target.value = ''
+      return
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setError('Profile photos must be 1 MB or smaller.')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setError('')
+      setForm((current) => ({ ...current, photoUrl: String(reader.result) }))
+    }
+    reader.onerror = () => setError('Could not read the selected image.')
+    reader.readAsDataURL(file)
+    event.target.value = ''
   }
 
   async function onSubmit(event: FormEvent) {
@@ -196,6 +222,20 @@ export function PractitionersPage() {
               onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
               placeholder="https://example.com/doctor.jpg"
             />
+            <label htmlFor="photoUpload">Or upload a photo (1 MB max)</label>
+            <input
+              id="photoUpload"
+              type="file"
+              accept="image/*"
+              onChange={selectPhoto}
+            />
+            {form.photoUrl ? (
+              <img
+                className="practitioner-photo-preview"
+                src={form.photoUrl}
+                alt="Profile photo preview"
+              />
+            ) : null}
           </div>
           <div className="field full">
             <label htmlFor="professionalSummary">Public profile summary</label>

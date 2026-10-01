@@ -210,6 +210,7 @@ export function upsertPractitioner(
         ? undefined
         : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
+      photoUrl: input.photoUrl?.trim() || undefined,
     }
   } else {
     next.practitioners.push({
@@ -229,6 +230,7 @@ export function upsertPractitioner(
         ? undefined
         : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
+      photoUrl: input.photoUrl?.trim() || undefined,
     })
   }
 
@@ -292,6 +294,7 @@ export function importPractitioners(
         ? undefined
         : input.availabilitySummary?.trim() || undefined,
       acceptingPatients: input.acceptingPatients ?? false,
+      photoUrl: input.photoUrl?.trim() || undefined,
     })
   }
 

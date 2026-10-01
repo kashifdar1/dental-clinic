@@ -152,6 +152,31 @@ describe('pure reducers', () => {
     expect(next.practitioners.at(-1)?.availabilitySummary).toBeUndefined()
   })
 
+  it('persists uploaded practitioner photo data URLs on create and update', () => {
+    const data = cloneDemo()
+    const created = upsertPractitioner(data, data.context, {
+      fullName: 'Dr. Photo Upload',
+      email: 'photo-upload@example.com',
+      phone: '+92 300 000 0000',
+      specialties: ['dentistry'],
+      active: true,
+      photoUrl: 'data:image/png;base64,cG5n',
+    })
+    const practitioner = created.practitioners.at(-1)!
+    expect(practitioner.photoUrl).toBe('data:image/png;base64,cG5n')
+
+    const updated = upsertPractitioner(created, created.context, {
+      id: practitioner.id,
+      fullName: practitioner.fullName,
+      email: practitioner.email,
+      phone: practitioner.phone,
+      specialties: practitioner.specialties,
+      active: true,
+      photoUrl: 'data:image/png;base64,updated',
+    })
+    expect(updated.practitioners.at(-1)?.photoUrl).toBe('data:image/png;base64,updated')
+  })
+
   it('creates and updates a tenant-scoped appointment request', () => {
     const data = cloneDemo()
     const created = createAppointmentRequest(data, {

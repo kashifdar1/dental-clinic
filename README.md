@@ -18,6 +18,9 @@ Other scripts:
 - `npm run typecheck` — TypeScript only
 - `npm run lint` — oxlint
 - `npm run preview` — preview the production build
+- `npx playwright install chromium` — install the browser used by UI automation
+- `npm run test:e2e` — run browser workflows, accessibility checks, and visual regressions
+- `npm run test:e2e:update` — intentionally refresh screenshot baselines after reviewing UI changes
 
 Copy `.env.example` to `.env` if you want to override the app name, storage key, host override,
 or public SEO origin. Production builds generate static public route shells, `sitemap.xml`, and

@@ -279,3 +279,11 @@ th {
   flex-wrap: wrap;
   gap: 0.75rem;
 }
+
+.practitioner-photo-preview {
+  width: 5rem;
+  height: 5rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  object-fit: cover;
+}

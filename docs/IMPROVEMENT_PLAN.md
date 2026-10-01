@@ -205,6 +205,16 @@ validated before starting the next one.
 10. [x] **Login stub** with membership picker and role-gated routes.
 11. [x] **SEO prerendering** of public routes once the public tree is decoupled (Phase 1).
 
+## Browser automation
+
+- [x] Playwright E2E for public language preference, directory search/clinic filtering,
+      appointment submission and admin status updates, and practitioner photo upload/public display.
+- [x] Axe scan for serious/critical public-directory accessibility violations.
+- [x] Desktop directory and mobile doctor-profile screenshot baselines, run in Windows CI.
+- [x] CI installs Chromium and runs `npm run test:e2e`; Vitest excludes the E2E folder.
+- [x] Practitioner photo upload stores an image data URL (1 MB maximum) in the demo store;
+      configured remote photo URLs remain supported.
+
 ## Deferred on purpose
 
 - Real auth, RLS, API, encryption, HIPAA: backend work, see the README roadmap.
