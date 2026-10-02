@@ -218,9 +218,13 @@ export function PractitionersPage() {
             <label htmlFor="photoUrl">Profile photo URL</label>
             <input
               id="photoUrl"
-              value={form.photoUrl}
+              value={form.photoUrl.startsWith('data:') ? '' : form.photoUrl}
               onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-              placeholder="https://example.com/doctor.jpg"
+              placeholder={
+                form.photoUrl.startsWith('data:')
+                  ? 'Uploaded image saved in demo data'
+                  : 'https://example.com/doctor.jpg'
+              }
             />
             <label htmlFor="photoUpload">Or upload a photo (1 MB max)</label>
             <input
