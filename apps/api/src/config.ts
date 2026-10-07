@@ -1,0 +1,72 @@
+import type { IdentityProviderMode } from '@clinic-hub/shared'
+import { z } from 'zod'
+
+const optionalSetting = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().trim().min(1).optional(),
+)
+
+const databaseUrl = z
+  .string()
+  .url()
+  .refine((value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol))
+
+const EnvironmentSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  HOST: z.string().trim().min(1).default('127.0.0.1'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3001),
+  DATABASE_URL: databaseUrl,
+  CLOUD_REGION: optionalSetting,
+  PLATFORM_DOMAIN: optionalSetting,
+  IDENTITY_MODE: z.enum(['local', 'oidc']).default('local'),
+  AUTH_ISSUER_URL: z.string().url().optional(),
+  AUTH_AUDIENCE: optionalSetting,
+})
+
+export interface ApiConfig {
+  nodeEnv: 'development' | 'test' | 'production'
+  host: string
+  port: number
+  databaseUrl: string
+  cloudRegion?: string
+  platformDomain?: string
+  identityMode: IdentityProviderMode
+  authIssuerUrl?: string
+  authAudience?: string
+}
+
+export function readConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
+  const parsed = EnvironmentSchema.safeParse(env)
+  if (!parsed.success) {
+    const fields = [...new Set(parsed.error.issues.map((issue) => issue.path[0]))]
+    throw new Error(`Invalid API configuration: ${fields.join(', ')}`)
+  }
+
+  const values = parsed.data
+  const missing = new Set<string>()
+
+  if (values.NODE_ENV === 'production') {
+    if (!values.CLOUD_REGION) missing.add('CLOUD_REGION')
+    if (!values.PLATFORM_DOMAIN) missing.add('PLATFORM_DOMAIN')
+    if (values.IDENTITY_MODE !== 'oidc') missing.add('IDENTITY_MODE=oidc')
+  }
+  if (values.IDENTITY_MODE === 'oidc') {
+    if (!values.AUTH_ISSUER_URL) missing.add('AUTH_ISSUER_URL')
+    if (!values.AUTH_AUDIENCE) missing.add('AUTH_AUDIENCE')
+  }
+  if (missing.size > 0) {
+    throw new Error(`Invalid API configuration: ${[...missing].join(', ')}`)
+  }
+
+  return {
+    nodeEnv: values.NODE_ENV,
+    host: values.HOST,
+    port: values.PORT,
+    databaseUrl: values.DATABASE_URL,
+    cloudRegion: values.CLOUD_REGION,
+    platformDomain: values.PLATFORM_DOMAIN,
+    identityMode: values.IDENTITY_MODE,
+    authIssuerUrl: values.AUTH_ISSUER_URL,
+    authAudience: values.AUTH_AUDIENCE,
+  }
+}

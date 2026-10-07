@@ -3,16 +3,24 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm run build --workspace=@clinic-hub/shared && npm run dev --workspace=@clinic-hub/api",
     "build": "tsc -b && vite build && node scripts/generate-seo.mjs",
+    "build:api": "npm run build --workspace=@clinic-hub/shared && npm run build --workspace=@clinic-hub/api",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "test:api": "npm run test --workspace=@clinic-hub/api",
+    "typecheck:api": "npm run build --workspace=@clinic-hub/shared && npm run typecheck --workspace=@clinic-hub/api"
   },
   "dependencies": {
     "papaparse": "^5.6.0",

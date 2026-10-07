@@ -225,9 +225,9 @@ The proposals and gates are recorded in `docs/adr/0001` through `docs/adr/0007`.
 
 Do this before adding business features.
 
-P0 may add the `fastify`, `zod`, `kysely`, and `pg` runtime dependencies, plus TypeScript and test
-configuration needed by the new workspaces. Use npm workspaces to preserve the existing lockfile and
-root demo. Add infrastructure-provider SDKs only in the phase that first uses them.
+P0 may add the `fastify`, `zod`, `kysely`, and `pg` runtime dependencies plus `@types/pg` and `tsx`
+for development. Reuse the root TypeScript/Vitest tools. Use npm workspaces to preserve the existing
+lockfile and root demo. Add infrastructure-provider SDKs only in the phase that first uses them.
 
 - [x] Preserve the demo on `feature/clinic-hub-public-directory`; retain it as the reference branch.
 - [x] Record selected architecture defaults and unresolved launch gates in `docs/adr/`.
