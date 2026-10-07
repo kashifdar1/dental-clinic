@@ -78,13 +78,13 @@ Platform plans and clinic services must remain separate concepts: plans/add-ons/
 | Area | Direction | Status before implementation |
 |---|---|---|
 | Shape | Custom TypeScript modular monolith; one API process and one worker entrypoint | Agreed |
-| Infrastructure | Managed PostgreSQL, object storage, queue, cache, secrets, monitoring, backups, CDN and TLS | Agreed |
-| Tenancy | Pooled database/schema with `tenant_id`, composite tenant keys and forced PostgreSQL RLS | Confirm through ADR |
-| API | REST/OpenAPI from shared schemas with typed clients and stable webhook/HIS contracts | Confirm through ADR |
-| Backend/data | Fastify-style modules and typed SQL/SQL-first migrations; final framework/query builder recorded in ADR | Confirm through ADR |
-| Async | Transactional outbox relayed to a managed queue with ordered processing and dead letters | Confirm through ADR |
-| Identity | Managed OIDC for authentication; RBAC and entitlement enforcement in our code | Confirm provider through ADR |
-| Frontends | Separate tenant console and platform console; server-rendered public application | Confirm public framework through ADR |
+| Infrastructure | AWS managed services proposed; Mumbai (`ap-south-1`) approved for dev/staging only; production region open | Proposed; see ADR-0001 |
+| Tenancy | Pooled database/schema with `tenant_id`, composite tenant keys and forced PostgreSQL RLS | Proposed in ADR-0002 |
+| API | REST/OpenAPI from shared schemas with typed clients and stable webhook/HIS contracts | Proposed in ADR-0002 |
+| Backend/data | Fastify, PostgreSQL, Kysely, SQL-first migrations, and Zod/OpenAPI contracts | Proposed in ADR-0002 |
+| Async | Transactional outbox relayed to a managed queue with ordered processing and dead letters | Proposed in ADR-0002 |
+| Identity | Cognito accepted for MVP; RBAC and entitlement enforcement remain in our code | Cognito accepted; detailed design proposed in ADR-0003 |
+| Frontends | Separate React/Vite consoles; Next.js server-rendered public application | Proposed in ADR-0002/0004 |
 | Vendors | Queue, storage, secrets, edge, WhatsApp, billing and AI behind ports | Required |
 | Delivery | Infrastructure as code, development/staging/production environments and gated CI | Required |
 
@@ -195,31 +195,42 @@ do not continue expanding `AppData` or treat `AppStore` as the production persis
 
 ## Development priority
 
-### Owner decisions required before structural implementation
+### Decisions and external launch gates
 
-Record each approved choice as an ADR. Do not infer an undecided vendor or policy choice from demo code.
+All seven ADRs were initially chosen autonomously without owner approval and are marked Proposed.
+Cognito is accepted for the MVP, and Mumbai is approved for development/staging only. Other proposals
+may guide reversible local foundation work, but are not production approvals. Keep open items as gates
+before production provisioning, public launch, billing, or real patient data.
 
-- [ ] Cloud provider and primary region, selected after latency and data-residency review.
-- [ ] Managed OIDC provider and identity realm design.
-- [ ] Backend framework and typed SQL/migration stack.
-- [ ] Public SSR framework and Urdu direction policy.
-- [ ] Edge/custom-domain provider after the Phase 0 spike.
-- [ ] Platform domain, tenant subdomain pattern and console hostnames.
-- [ ] Pakistan launch billing route and tax-invoice fields.
-- [ ] Meta Tech Provider versus partner/BSP route and tenant payment feasibility.
-- [ ] First-publish verification policy for facilities and practitioners.
-- [ ] Suspended-tenant behavior for public sites and outbound messaging.
-- [ ] Single-region data-residency disclosure and backup-region policy.
-- [ ] Initial plan tiers, entitlement keys, limits and prices.
+- [ ] AWS is the proposed cloud provider.
+- [x] Mumbai (`ap-south-1`) approved for development and staging only.
+- [ ] Production region: compare Mumbai with UAE (`me-central-1`) for Pakistan latency, data residency,
+   and Pakistani clinic/regulator views of health data hosted in India before storing real patient data.
+- [ ] Single-region deployment with tenant disclosure remains a proposed default; approve the
+   production disclosure and backup-region policy after the region comparison.
+- [x] Cognito accepted for MVP; keep it behind the application-owned identity interface.
+- [ ] Fastify, PostgreSQL, Kysely, SQL migrations and Zod/OpenAPI remain proposed stack choices.
+- [ ] Next.js public SSR and full Urdu RTL remain proposed; Cloudflare for SaaS is preferred pending edge spike.
+- [ ] Use `<tenant>.<platform-domain>`; Clinic Hub is the working brand, exact domain remains TBD.
+- [ ] Manual invoice plus bank transfer/Raast remains proposed; accountant must confirm tax fields.
+- [ ] Meta Tech Provider/Embedded Signup v4 remains proposed; validate Pakistani tenant payment
+   feasibility with a pilot before promising self-service WhatsApp.
+- [ ] Manual first-publish verification and lifecycle/suspension policies remain proposed.
+- [ ] Confirm production-region disclosure and backup-region policy after the region comparison.
+- [ ] Owner to define plan tiers, entitlement limits and prices before subscription launch.
+
+The proposals and gates are recorded in `docs/adr/0001` through `docs/adr/0007`.
 
 ### P0 — Foundation and hard boundaries
 
 Do this before adding business features.
 
+P0 may add the `fastify`, `zod`, `kysely`, and `pg` runtime dependencies, plus TypeScript and test
+configuration needed by the new workspaces. Use npm workspaces to preserve the existing lockfile and
+root demo. Add infrastructure-provider SDKs only in the phase that first uses them.
+
 - [x] Preserve the demo on `feature/clinic-hub-public-directory`; retain it as the reference branch.
-- [ ] Record the unresolved decisions in architecture decision records:
-   cloud/region, identity provider, public-site framework, domain provider, billing route, platform
-   domain, publish gate, data residency and suspended-tenant behavior.
+- [x] Record selected architecture defaults and unresolved launch gates in `docs/adr/`.
 - [ ] Create the target monorepo structure with `apps/api`, `apps/worker`, `apps/web-console`,
    `apps/web-platform`, `apps/web-public`, `packages/shared`, `packages/ui` and infrastructure code.
 - [ ] Establish shared configuration, structured redacted logging, error contracts, health checks,
@@ -234,6 +245,9 @@ Do this before adding business features.
 **P0 exit condition:** two seeded tenants cannot read or write each other's data through any tested
 path; platform and tenant users authenticate through separate trusted boundaries; public code receives
 no private tenant data.
+
+**Production patient-data gate:** do not store real patient data until the production-region comparison,
+residency review, and region/backup decision are complete. Mumbai is dev/staging only.
 
 ### P1 — Tenant core, catalog and booking foundation
 
@@ -291,7 +305,7 @@ demo entities.
 
 Recommended first pull request:
 
-1. Preserve the demo branch/tag and create the monorepo skeleton.
+1. Create the monorepo skeleton; the demo remains preserved on its reference branch.
 2. Add shared TypeScript, lint and test configuration.
 3. Add an API skeleton with configuration validation, redacted logging, request IDs, error responses,
    health endpoints and generated OpenAPI.
@@ -302,6 +316,8 @@ Recommended first pull request:
 
 Keep this first slice free of catalog, scheduling, billing and WhatsApp behavior. Its purpose is to
 prove the security, persistence and module boundaries that every later feature depends on.
+Use the ADR defaults with environment-driven region/domain placeholders. Do not create cloud accounts,
+register domains, connect real WhatsApp tenants, or charge money as part of local scaffolding.
 
 ## Validation baseline
 
@@ -319,9 +335,12 @@ At the time of this review:
 - The demo reference branch was fast-forward merged into local `main` at `0864a8e` on 2026-10-07;
    the reference branch remains available. No push was performed.
 - Active work branch: `feature/platform-p0-foundation`.
-- No production-platform backlog item above has been completed yet.
-- Current recommended work: owner decisions/ADRs, preservation of the demo, then the P0 foundation
-  pull request described above.
+- ADR-0001 through ADR-0007 are Proposed; Cognito is accepted for MVP and Mumbai is approved for
+   development/staging only. Production region remains open.
+- No production-platform implementation item has been completed yet.
+- Current recommended work: create the P0 monorepo/API foundation described above.
+- Proposals were initially selected autonomously without owner approval; no priority overrides or skipped
+   prerequisites.
 - Approved priority overrides: none.
 - Deliberately skipped prerequisites: none.
 
