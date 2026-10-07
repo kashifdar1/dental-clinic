@@ -4,6 +4,10 @@ Source: principal-architect review of the whole project on 2026-09-18, on branch
 `feature/clinic-hub-public-directory`. Line numbers were correct on that date and may drift.
 Update the checkboxes in this file as work lands so the next agent knows where things stand.
 
+> **Historical source only (2026-10-06):** this demo backlog is complete. The consolidated product
+> scope, production architecture, gap analysis, priority order and active checklist now live in
+> [GAP_ANALYSIS.md](GAP_ANALYSIS.md). Use that file for all new work.
+
 Baseline at review time: `npm run typecheck`, `npm run lint`, `npm run test` all green (20 tests).
 
 ## Recommendation: what to fix now versus later

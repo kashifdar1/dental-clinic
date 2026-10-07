@@ -1,4 +1,5 @@
 # Clinic Hub
 
 Follow `AGENTS.md` in this directory. It holds the shared instructions for every coding
-agent, and it points to the ordered backlog in `docs/IMPROVEMENT_PLAN.md`.
+agent, including the task-start consent rule, and points to the single authoritative plan in
+`docs/GAP_ANALYSIS.md`.
