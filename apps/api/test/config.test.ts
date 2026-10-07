@@ -23,7 +23,7 @@ describe('API configuration', () => {
         DATABASE_URL: 'postgres://user:private-secret@db.example/clinic',
       }),
     )
-      .toThrow(/CLOUD_REGION, PLATFORM_DOMAIN, IDENTITY_MODE=oidc/)
+      .toThrow(/CLOUD_REGION, PLATFORM_DOMAIN, PLATFORM_DATABASE_URL, IDENTITY_MODE=oidc/)
 
     try {
       readConfig({
@@ -42,16 +42,30 @@ describe('API configuration', () => {
       CLOUD_REGION: 'me-central-1',
       PLATFORM_DOMAIN: 'clinic.example.test',
       IDENTITY_MODE: 'oidc',
-      AUTH_ISSUER_URL: 'https://identity.example.test/',
-      AUTH_AUDIENCE: 'clinic-hub-api',
+      TENANT_AUTH_ISSUER_URL: 'https://tenant-identity.example.test/',
+      TENANT_AUTH_JWKS_URL: 'https://tenant-identity.example.test/.well-known/jwks.json',
+      TENANT_AUTH_AUDIENCE: 'tenant-api',
+      PLATFORM_AUTH_ISSUER_URL: 'https://platform-identity.example.test/',
+      PLATFORM_AUTH_JWKS_URL: 'https://platform-identity.example.test/.well-known/jwks.json',
+      PLATFORM_AUTH_AUDIENCE: 'platform-api',
+      PLATFORM_MFA_REQUIRED: 'true',
     })
 
     expect(config).toMatchObject({
       cloudRegion: 'me-central-1',
       platformDomain: 'clinic.example.test',
       identityMode: 'oidc',
-      authIssuerUrl: 'https://identity.example.test/',
-      authAudience: 'clinic-hub-api',
+      tenantAuth: {
+        issuer: 'https://tenant-identity.example.test/',
+        jwksUrl: 'https://tenant-identity.example.test/.well-known/jwks.json',
+        audience: 'tenant-api',
+      },
+      platformAuth: {
+        issuer: 'https://platform-identity.example.test/',
+        jwksUrl: 'https://platform-identity.example.test/.well-known/jwks.json',
+        audience: 'platform-api',
+      },
+      platformMfaRequired: true,
     })
   })
 

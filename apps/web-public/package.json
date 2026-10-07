@@ -1,0 +1,19 @@
+{
+  "name": "@clinic-hub/web-public",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 3102",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1 --port 3102"
+  },
+  "dependencies": {
+    "next": "^16.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}

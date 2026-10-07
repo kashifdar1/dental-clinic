@@ -10,8 +10,15 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "npm run build --workspace=@clinic-hub/shared && npm run dev --workspace=@clinic-hub/api",
+    "dev:console": "npm run dev --workspace=@clinic-hub/web-console",
+    "dev:platform": "npm run dev --workspace=@clinic-hub/web-platform",
+    "dev:public": "npm run dev --workspace=@clinic-hub/web-public",
     "build": "tsc -b && vite build && node scripts/generate-seo.mjs",
     "build:api": "npm run build --workspace=@clinic-hub/shared && npm run build --workspace=@clinic-hub/api",
+    "build:worker": "npm run build --workspace=@clinic-hub/worker",
+    "build:web-console": "npm run build --workspace=@clinic-hub/web-console",
+    "build:web-platform": "npm run build --workspace=@clinic-hub/web-platform",
+    "build:web-public": "npm run build --workspace=@clinic-hub/web-public",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
@@ -19,8 +26,12 @@
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
     "typecheck": "tsc -b --pretty false",
-    "test:api": "npm run test --workspace=@clinic-hub/api",
-    "typecheck:api": "npm run build --workspace=@clinic-hub/shared && npm run typecheck --workspace=@clinic-hub/api"
+    "test:api": "npm run build --workspace=@clinic-hub/shared && npm run test --workspace=@clinic-hub/api",
+    "typecheck:api": "npm run build --workspace=@clinic-hub/shared && npm run typecheck --workspace=@clinic-hub/api",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:bootstrap": "npm run bootstrap:db --workspace=@clinic-hub/api",
+    "db:migrate": "npm run migrate:db --workspace=@clinic-hub/api",
+    "test:db": "npm run bootstrap:db --workspace=@clinic-hub/api && npm run migrate:db --workspace=@clinic-hub/api -- --test && npm run test:db --workspace=@clinic-hub/api"
   },
   "dependencies": {
     "papaparse": "^5.6.0",

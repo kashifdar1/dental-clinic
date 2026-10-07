@@ -16,11 +16,17 @@ const EnvironmentSchema = z.object({
   HOST: z.string().trim().min(1).default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   DATABASE_URL: databaseUrl,
+  PLATFORM_DATABASE_URL: databaseUrl.optional(),
   CLOUD_REGION: optionalSetting,
   PLATFORM_DOMAIN: optionalSetting,
   IDENTITY_MODE: z.enum(['local', 'oidc']).default('local'),
-  AUTH_ISSUER_URL: z.string().url().optional(),
-  AUTH_AUDIENCE: optionalSetting,
+  TENANT_AUTH_ISSUER_URL: z.string().url().optional(),
+  TENANT_AUTH_JWKS_URL: z.string().url().optional(),
+  TENANT_AUTH_AUDIENCE: optionalSetting,
+  PLATFORM_AUTH_ISSUER_URL: z.string().url().optional(),
+  PLATFORM_AUTH_JWKS_URL: z.string().url().optional(),
+  PLATFORM_AUTH_AUDIENCE: optionalSetting,
+  PLATFORM_MFA_REQUIRED: z.enum(['true', 'false']).default('true'),
 })
 
 export interface ApiConfig {
@@ -28,11 +34,13 @@ export interface ApiConfig {
   host: string
   port: number
   databaseUrl: string
+  platformDatabaseUrl?: string
   cloudRegion?: string
   platformDomain?: string
   identityMode: IdentityProviderMode
-  authIssuerUrl?: string
-  authAudience?: string
+  tenantAuth?: { issuer: string; jwksUrl: string; audience: string }
+  platformAuth?: { issuer: string; jwksUrl: string; audience: string }
+  platformMfaRequired: boolean
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -48,11 +56,25 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   if (values.NODE_ENV === 'production') {
     if (!values.CLOUD_REGION) missing.add('CLOUD_REGION')
     if (!values.PLATFORM_DOMAIN) missing.add('PLATFORM_DOMAIN')
+    if (!values.PLATFORM_DATABASE_URL) missing.add('PLATFORM_DATABASE_URL')
     if (values.IDENTITY_MODE !== 'oidc') missing.add('IDENTITY_MODE=oidc')
   }
   if (values.IDENTITY_MODE === 'oidc') {
-    if (!values.AUTH_ISSUER_URL) missing.add('AUTH_ISSUER_URL')
-    if (!values.AUTH_AUDIENCE) missing.add('AUTH_AUDIENCE')
+    if (!values.TENANT_AUTH_ISSUER_URL) missing.add('TENANT_AUTH_ISSUER_URL')
+    if (!values.TENANT_AUTH_JWKS_URL) missing.add('TENANT_AUTH_JWKS_URL')
+    if (!values.TENANT_AUTH_AUDIENCE) missing.add('TENANT_AUTH_AUDIENCE')
+    if (!values.PLATFORM_AUTH_ISSUER_URL) missing.add('PLATFORM_AUTH_ISSUER_URL')
+    if (!values.PLATFORM_AUTH_JWKS_URL) missing.add('PLATFORM_AUTH_JWKS_URL')
+    if (!values.PLATFORM_AUTH_AUDIENCE) missing.add('PLATFORM_AUTH_AUDIENCE')
+    if (
+      values.TENANT_AUTH_ISSUER_URL &&
+      values.TENANT_AUTH_ISSUER_URL === values.PLATFORM_AUTH_ISSUER_URL
+    ) {
+      missing.add('separate tenant and platform OIDC issuers')
+    }
+    if (values.NODE_ENV === 'production' && values.PLATFORM_MFA_REQUIRED !== 'true') {
+      missing.add('PLATFORM_MFA_REQUIRED=true')
+    }
   }
   if (missing.size > 0) {
     throw new Error(`Invalid API configuration: ${[...missing].join(', ')}`)
@@ -63,10 +85,30 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     host: values.HOST,
     port: values.PORT,
     databaseUrl: values.DATABASE_URL,
+    platformDatabaseUrl: values.PLATFORM_DATABASE_URL,
     cloudRegion: values.CLOUD_REGION,
     platformDomain: values.PLATFORM_DOMAIN,
     identityMode: values.IDENTITY_MODE,
-    authIssuerUrl: values.AUTH_ISSUER_URL,
-    authAudience: values.AUTH_AUDIENCE,
+    tenantAuth:
+      values.TENANT_AUTH_ISSUER_URL &&
+      values.TENANT_AUTH_JWKS_URL &&
+      values.TENANT_AUTH_AUDIENCE
+        ? {
+            issuer: values.TENANT_AUTH_ISSUER_URL,
+            jwksUrl: values.TENANT_AUTH_JWKS_URL,
+            audience: values.TENANT_AUTH_AUDIENCE,
+          }
+        : undefined,
+    platformAuth:
+      values.PLATFORM_AUTH_ISSUER_URL &&
+      values.PLATFORM_AUTH_JWKS_URL &&
+      values.PLATFORM_AUTH_AUDIENCE
+        ? {
+            issuer: values.PLATFORM_AUTH_ISSUER_URL,
+            jwksUrl: values.PLATFORM_AUTH_JWKS_URL,
+            audience: values.PLATFORM_AUTH_AUDIENCE,
+          }
+        : undefined,
+    platformMfaRequired: values.PLATFORM_MFA_REQUIRED === 'true',
   }
 }

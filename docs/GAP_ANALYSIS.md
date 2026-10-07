@@ -225,22 +225,23 @@ The proposals and gates are recorded in `docs/adr/0001` through `docs/adr/0007`.
 
 Do this before adding business features.
 
-P0 may add the `fastify`, `zod`, `kysely`, and `pg` runtime dependencies plus `@types/pg` and `tsx`
-for development. Reuse the root TypeScript/Vitest tools. Use npm workspaces to preserve the existing
-lockfile and root demo. Add infrastructure-provider SDKs only in the phase that first uses them.
+P0 may add `fastify`, `@fastify/cookie`, `@fastify/swagger`, `jose`, `zod`, `kysely`, and `pg`, plus
+`@types/pg` and `tsx` for development. Reuse root TypeScript/Vitest/Vite/React tools. Add Next.js for
+the public-app shell. Use npm workspaces to preserve the existing lockfile and root demo. Add
+infrastructure-provider SDKs only in the phase that first uses them.
 
 - [x] Preserve the demo on `feature/clinic-hub-public-directory`; retain it as the reference branch.
 - [x] Record selected architecture defaults and unresolved launch gates in `docs/adr/`.
-- [ ] Create the target monorepo structure with `apps/api`, `apps/worker`, `apps/web-console`,
+- [x] Create the target monorepo structure with `apps/api`, `apps/worker`, `apps/web-console`,
    `apps/web-platform`, `apps/web-public`, `packages/shared`, `packages/ui` and infrastructure code.
-- [ ] Establish shared configuration, structured redacted logging, error contracts, health checks,
+- [x] Establish shared configuration, structured redacted logging, error contracts, health checks,
    OpenAPI generation and graceful shutdown.
-- [ ] Add PostgreSQL migrations, separate migration/application roles, forced RLS, composite tenant
+- [x] Add PostgreSQL migrations, separate migration/application roles, forced RLS, composite tenant
    constraints and the transaction-scoped `withTenant()` wrapper.
-- [ ] Add the RLS catalog check, two-tenant isolation suite and authorization-matrix test to CI.
-- [ ] Integrate identity, sessions, CSRF protection, MFA for platform staff, invitations and the permission
+- [x] Add the RLS catalog check, two-tenant isolation suite and authorization-matrix test to CI.
+- [x] Integrate identity, sessions, CSRF protection, MFA for platform staff, invitations and the permission
    catalog with fail-closed route guards.
-- [ ] Add server-side append-only audit events and security events.
+- [x] Add server-side append-only audit events and security events.
 
 **P0 exit condition:** two seeded tenants cannot read or write each other's data through any tested
 path; platform and tenant users authenticate through separate trusted boundaries; public code receives
@@ -248,6 +249,11 @@ no private tenant data.
 
 **Production patient-data gate:** do not store real patient data until the production-region comparison,
 residency review, and region/backup decision are complete. Mumbai is dev/staging only.
+
+The local identity boundary is implemented and tested with configurable tenant/platform OIDC issuers,
+separate session stores/cookies, and platform MFA claims. Actual Cognito app-client configuration and
+first platform-staff provisioning remain deployment prerequisites; no identity provider or cloud
+resource was created in this P0 slice.
 
 ### P1 — Tenant core, catalog and booking foundation
 
@@ -337,8 +343,14 @@ At the time of this review:
 - Active work branch: `feature/platform-p0-foundation`.
 - ADR-0001 through ADR-0007 are Proposed; Cognito is accepted for MVP and Mumbai is approved for
    development/staging only. Production region remains open.
-- No production-platform implementation item has been completed yet.
-- Current recommended work: create the P0 monorepo/API foundation described above.
+- P0 local foundation is complete: npm workspaces, API/worker/console/public shells, OIDC/session/RBAC
+   boundaries, invitations, append-only audit/security events, PostgreSQL RLS, and CI integration checks.
+- Validation: demo 65 tests; API 170 tests; PostgreSQL integration 7 tests; workspace and demo builds
+   passed; lint/typecheck passed; npm audit reported zero vulnerabilities.
+- No production resources, real domains, Meta accounts, billing, or patient data were touched.
+- Next recommended priority: P1 tenant core, locations, memberships and platform operator console.
+- Cognito app-client setup and initial platform-staff provisioning remain explicit identity deployment
+   gates; production region/data-residency remains the real-patient-data gate.
 - Proposals were initially selected autonomously without owner approval; no priority overrides or skipped
    prerequisites.
 - Approved priority overrides: none.

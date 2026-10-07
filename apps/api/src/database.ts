@@ -1,7 +1,6 @@
 import { Kysely, PostgresDialect, sql } from 'kysely'
 import { Pool } from 'pg'
-
-type ApiDatabase = Record<string, never>
+import type { ApiDatabase } from './db/schema.js'
 
 export function createDatabase(connectionString: string) {
   const database = new Kysely<ApiDatabase>({
@@ -16,6 +15,7 @@ export function createDatabase(connectionString: string) {
   })
 
   return {
+    database,
     async check(): Promise<void> {
       await sql`select 1`.execute(database)
     },
