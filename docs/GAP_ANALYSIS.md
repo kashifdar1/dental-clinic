@@ -216,7 +216,7 @@ Record each approved choice as an ADR. Do not infer an undecided vendor or polic
 
 Do this before adding business features.
 
-- [ ] Preserve the demo with a tag or dedicated branch.
+- [x] Preserve the demo on `feature/clinic-hub-public-directory`; retain it as the reference branch.
 - [ ] Record the unresolved decisions in architecture decision records:
    cloud/region, identity provider, public-site framework, domain provider, billing route, platform
    domain, publish gate, data residency and suspended-tenant behavior.
@@ -316,6 +316,9 @@ At the time of this review:
 ## Current checkpoint and approved overrides
 
 - The localStorage demo improvement backlog is complete.
+- The demo reference branch was fast-forward merged into local `main` at `0864a8e` on 2026-10-07;
+   the reference branch remains available. No push was performed.
+- Active work branch: `feature/platform-p0-foundation`.
 - No production-platform backlog item above has been completed yet.
 - Current recommended work: owner decisions/ADRs, preservation of the demo, then the P0 foundation
   pull request described above.
