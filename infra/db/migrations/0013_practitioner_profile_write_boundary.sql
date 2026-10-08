@@ -1,0 +1,1 @@
+REVOKE UPDATE ON clinic_hub.practitioners FROM clinic_hub_app;

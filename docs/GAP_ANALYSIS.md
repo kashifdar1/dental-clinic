@@ -254,14 +254,20 @@ and clients separate.
    cross-tenant search, and audit/security-event viewing.
 - [x] Add time-boxed, reasoned, audited, read-only support impersonation. Platform staff cannot mutate
    tenant data through support access; tokens are hashed, expire after 15 minutes, and are revocable.
-- [ ] Replace `Patient` and `VisitNote` with contacts, communication consents and optional
-   `external_patient_ref`.
-- [ ] Implement practitioners as people with location assignments, registration numbers and verification.
-- [ ] Implement service categories, services, location offerings and practitioner-service assignments.
-- [ ] Implement schedules, exceptions, slot generation, holds, appointment requests, confirmed
-   appointments, status history, reschedule/cancel and the database double-booking constraint.
-- [ ] Port CSV import/export server-side with formula escaping and shared boundary schemas.
-- [ ] Publish stable OpenAPI contracts and the initial HIS integration boundary.
+- [x] Add production minimal contacts scoped to a location, E.164 phone and optional email/language/
+   opaque `external_patient_ref`; record append-only communication-consent evidence by channel and
+   purpose. Keep demo `Patient` and `VisitNote` data isolated to the preserved localStorage reference.
+- [x] Implement tenant-scoped practitioner identities with multi-location assignments, registration
+   authority/numbers, branch-specific verification, and per-location publication state.
+- [x] Implement tenant-wide service categories/definitions, location-specific offerings with duration
+   and minor-unit price metadata, and same-location practitioner-service assignments.
+- [x] Implement location-timezone schedules and date exceptions, slot generation, expiring holds,
+   appointment requests/confirmation, append-only status history, reschedule/cancel and the database
+   double-booking constraint.
+- [x] Port location-scoped practitioner CSV import/export server-side with preview validation, atomic
+   commit, formula escaping and shared boundary schemas.
+- [x] Publish stable versioned OpenAPI contracts, shared HIS appointment request/event schemas, and
+   tenant/location-scoped idempotent appointment creation; no external HIS connection is enabled yet.
 
 **P1 exit condition:** authorized staff can configure locations, services, practitioners and schedules
 and create bookings without cross-tenant access or double-booking.
@@ -301,9 +307,11 @@ booking workflow with reliable reminders and safe staff handoff.
 ## The next development slice
 
 Continue with P1 in dependency order. Tenant lifecycle, locations, memberships/invitations, operator
-console, and controlled read-only support access are complete. Next add minimal contacts/consents,
-multi-location practitioner assignments, the service catalog, and scheduling/booking. Do not add
-clinical records, diagnoses, prescriptions, or visit notes.
+console, controlled read-only support access, location-scoped contacts/consents, multi-location
+practitioner assignments, clinic service catalog, scheduling/booking, and practitioner CSV import/export
+are complete. Stable OpenAPI and the initial HIS integration boundary are now defined; next priority is
+P2 commercial plans and entitlements, pending owner-defined pricing and tiers. Do not add clinical
+records, diagnoses, prescriptions, or visit notes.
 
 ## Validation baseline
 
@@ -325,15 +333,20 @@ At the time of this review:
    development/staging only. Production region remains open.
 - P0 local foundation is complete: npm workspaces, API/worker/console/public shells, OIDC/session/RBAC
    boundaries, invitations, append-only audit/security events, PostgreSQL RLS, and CI integration checks.
-- Validation: demo 65 tests; API 170 tests; PostgreSQL integration 7 tests; workspace and demo builds
-   passed; lint/typecheck passed; npm audit reported zero vulnerabilities.
+- Validation: demo 65 tests; API 187 tests; PostgreSQL integration 19 tests; all workspace and demo
+   builds passed; lint/typecheck passed; npm audit reported zero vulnerabilities.
 - P1 tenant lifecycle/location API, scoped memberships and invitations, tenant/platform consoles,
    tenant provisioning, lifecycle transitions, search, and audit viewing are implemented locally.
-- Controlled support access is limited to read-only snapshots. Minimal contacts/consents, multi-location
-   directory, catalog, and scheduling remain.
+- Controlled support access is limited to read-only snapshots. Contacts, consent events, practitioner
+   assignments, practitioner profiles, location offerings, and practitioner-service assignments are
+   scoped by forced tenant/location RLS. Consent evidence restricts physical contact/location deletion
+   until an explicit retention/anonymization workflow is designed. Schedules and booking lifecycles use
+   timezone-aware slots, append-only history, and database-enforced overlap prevention.
+- OpenAPI contract v1.0.0 and shared HIS appointment request/event schemas are published; appointment
+   creation accepts tenant/location-scoped idempotency keys. No external HIS connection is enabled.
 - No production resources, real domains, Meta accounts, billing, or patient data were touched.
-- Next recommended priority: P1 minimal contacts and communication consents, then practitioner/location
-   assignments and the service catalog.
+- Next recommended priority: P2 versioned plans and entitlements; owner input on pricing and plan tiers
+   remains a prerequisite to subscription launch.
 - Cognito app-client setup and initial platform-staff provisioning remain explicit identity deployment
    gates; production region/data-residency remains the real-patient-data gate.
 - Proposals were initially selected autonomously without owner approval; no priority overrides or skipped

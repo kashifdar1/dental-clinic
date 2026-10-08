@@ -1,4 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import {
+  API_CONTRACT_VERSION,
+  HISAppointmentEventSchema,
+  HISAppointmentRequestSchema,
+  HIS_REQUEST_VERSION,
+  IdempotencyKeySchema,
+} from '@clinic-hub/shared'
 import { createApi } from '../src/app.js'
 import type { SessionStore } from '../src/auth/session-store.js'
 
@@ -61,14 +68,49 @@ describe('API health endpoints', () => {
 
     const response = await app.inject({ method: 'GET', url: '/openapi.json' })
     const document = response.json()
+    const versionedResponse = await app.inject({ method: 'GET', url: '/v1/openapi.json' })
+    const versionedDocument = versionedResponse.json()
 
     expect(response.statusCode).toBe(200)
     expect(document.openapi).toMatch(/^3\./)
+    expect(document.info.version).toBe(API_CONTRACT_VERSION)
+    expect(versionedResponse.statusCode).toBe(200)
+    expect(versionedDocument).toEqual(document)
     expect(document.paths['/health/live']).toBeDefined()
     expect(document.paths['/health/ready']).toBeDefined()
     expect(document.paths['/v1/me']).toBeDefined()
     expect(document.paths['/auth/tenant/session']).toBeDefined()
     expect(document.paths['/auth/platform/session']).toBeDefined()
+    expect(document.paths['/v1/tenant/appointments'].post.parameters).toContainEqual(
+      expect.objectContaining({ name: 'idempotency-key', in: 'header' }),
+    )
+  })
+
+  it('validates versioned HIS appointment and idempotency contracts', () => {
+    expect(IdempotencyKeySchema.safeParse('short').success).toBe(false)
+    expect(IdempotencyKeySchema.safeParse('his-request-2026-0001').success).toBe(true)
+    expect(HISAppointmentRequestSchema.safeParse({
+      contractVersion: HIS_REQUEST_VERSION,
+      externalPatientRef: 'HIS-123',
+      serviceId: '00000000-0000-4000-8000-000000000011',
+      practitionerId: '00000000-0000-4000-8000-000000000012',
+      startsAt: '2030-01-07T04:00:00.000Z',
+    }).success).toBe(true)
+    expect(HISAppointmentEventSchema.safeParse({
+      contractVersion: '1',
+      eventId: '00000000-0000-4000-8000-000000000013',
+      eventType: 'appointment.requested',
+      occurredAt: '2030-01-07T04:00:00.000Z',
+      tenantId: '00000000-0000-4000-8000-000000000001',
+      locationId: '00000000-0000-4000-8000-000000000011',
+      appointmentId: '00000000-0000-4000-8000-000000000014',
+      serviceId: '00000000-0000-4000-8000-000000000015',
+      practitionerId: '00000000-0000-4000-8000-000000000016',
+      startsAt: '2030-01-07T04:00:00.000Z',
+      endsAt: '2030-01-07T04:30:00.000Z',
+      status: 'requested',
+      externalPatientRef: 'HIS-123',
+    }).success).toBe(true)
   })
 
   it('fails closed on protected routes and accepts only an authenticated identity', async () => {
