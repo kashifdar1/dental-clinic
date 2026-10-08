@@ -252,8 +252,8 @@ and clients separate.
 - [x] Implement tenants, locations, lifecycle states, memberships, invitations and scoped role assignments.
 - [x] Build the initial platform operator console for tenant listing, creation, lifecycle transitions,
    cross-tenant search, and audit/security-event viewing.
-- [ ] Add time-boxed, reasoned, audited, read-only support impersonation. Platform staff must not gain
-   tenant write permissions through support access.
+- [x] Add time-boxed, reasoned, audited, read-only support impersonation. Platform staff cannot mutate
+   tenant data through support access; tokens are hashed, expire after 15 minutes, and are revocable.
 - [ ] Replace `Patient` and `VisitNote` with contacts, communication consents and optional
    `external_patient_ref`.
 - [ ] Implement practitioners as people with location assignments, registration numbers and verification.
@@ -300,9 +300,10 @@ booking workflow with reliable reminders and safe staff handoff.
 
 ## The next development slice
 
-Continue with P1 in dependency order. The first tenant-core/API/console slice is complete; the next
-slice is read-only support access and minimal contacts/consents, followed by multi-location practitioner
-assignments and catalog/scheduling. Do not add clinical records, diagnoses, prescriptions, or visit notes.
+Continue with P1 in dependency order. Tenant lifecycle, locations, memberships/invitations, operator
+console, and controlled read-only support access are complete. Next add minimal contacts/consents,
+multi-location practitioner assignments, the service catalog, and scheduling/booking. Do not add
+clinical records, diagnoses, prescriptions, or visit notes.
 
 ## Validation baseline
 
@@ -328,9 +329,11 @@ At the time of this review:
    passed; lint/typecheck passed; npm audit reported zero vulnerabilities.
 - P1 tenant lifecycle/location API, scoped memberships and invitations, tenant/platform consoles,
    tenant provisioning, lifecycle transitions, search, and audit viewing are implemented locally.
-- Controlled support impersonation and contacts, multi-location directory, catalog, and scheduling remain.
+- Controlled support access is limited to read-only snapshots. Minimal contacts/consents, multi-location
+   directory, catalog, and scheduling remain.
 - No production resources, real domains, Meta accounts, billing, or patient data were touched.
-- Next recommended priority: P1 controlled read-only support access and minimal contacts/consents.
+- Next recommended priority: P1 minimal contacts and communication consents, then practitioner/location
+   assignments and the service catalog.
 - Cognito app-client setup and initial platform-staff provisioning remain explicit identity deployment
    gates; production region/data-residency remains the real-patient-data gate.
 - Proposals were initially selected autonomously without owner approval; no priority overrides or skipped

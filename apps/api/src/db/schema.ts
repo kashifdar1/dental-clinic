@@ -104,6 +104,17 @@ export interface SecurityEventsTable {
   occurred_at: Timestamp
 }
 
+export interface SupportSessionsTable {
+  id: string
+  tenant_id: string
+  platform_subject: string
+  reason: string
+  token_hash: string
+  created_at: Timestamp
+  expires_at: Timestamp
+  revoked_at: Timestamp | null
+}
+
 export interface ApiDatabase {
   tenants: TenantsTable
   locations: LocationsTable
@@ -114,4 +125,5 @@ export interface ApiDatabase {
   invitations: InvitationsTable
   platform_staff: PlatformStaffTable
   security_events: SecurityEventsTable
+  support_sessions: SupportSessionsTable
 }

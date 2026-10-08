@@ -487,6 +487,57 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
     )
   })
 
+  it('limits support sessions to reasoned, short-lived, read-only tenant snapshots', async () => {
+    const started = await api.inject({
+      method: 'POST',
+      url: `/v1/platform/tenants/${tenantA}/support-sessions`,
+      headers: { authorization: 'Bearer platform-test-token' },
+      payload: { reason: 'Investigate a tenant-reported location setup issue' },
+    })
+    expect(started.statusCode).toBe(201)
+    const session = started.json()
+    expect(new Date(session.expiresAt).getTime() - Date.now()).toBeLessThanOrEqual(15 * 60 * 1000)
+
+    const snapshot = await api.inject({
+      method: 'GET',
+      url: `/v1/platform/support-sessions/${session.id}/snapshot`,
+      headers: {
+        authorization: 'Bearer platform-test-token',
+        'x-support-token': session.token,
+      },
+    })
+    expect(snapshot.statusCode).toBe(200)
+    expect(snapshot.json().tenant.id).toBe(tenantA)
+    expect(snapshot.json().locations.length).toBeGreaterThan(0)
+    expect(snapshot.json()).not.toHaveProperty('patients')
+
+    const invalidToken = await api.inject({
+      method: 'GET',
+      url: `/v1/platform/support-sessions/${session.id}/snapshot`,
+      headers: {
+        authorization: 'Bearer platform-test-token',
+        'x-support-token': 'invalid-support-token',
+      },
+    })
+    expect(invalidToken.statusCode).toBe(403)
+
+    const ended = await api.inject({
+      method: 'DELETE',
+      url: `/v1/platform/support-sessions/${session.id}`,
+      headers: { authorization: 'Bearer platform-test-token' },
+    })
+    expect(ended.statusCode).toBe(204)
+    const revokedSnapshot = await api.inject({
+      method: 'GET',
+      url: `/v1/platform/support-sessions/${session.id}/snapshot`,
+      headers: {
+        authorization: 'Bearer platform-test-token',
+        'x-support-token': session.token,
+      },
+    })
+    expect(revokedSnapshot.statusCode).toBe(410)
+  })
+
   it('discovers only tenants attached to the authenticated membership', async () => {
     const response = await api.inject({
       method: 'GET',

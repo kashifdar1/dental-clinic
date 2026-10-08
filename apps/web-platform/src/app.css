@@ -42,9 +42,13 @@ h2 span { color: #68766f; font-size: 14px; font-weight: 500; }
   border-bottom: 1px solid #d8dfda;
 }
 .tenant-search { max-width: 360px; margin: 12px 0 6px; }
+.support-reason { max-width: 600px; margin: 12px 0; }
 .audit-heading { display: flex; align-items: end; gap: 14px; justify-content: space-between; }
 .audit-heading h2 { margin-right: auto; }
 .audit-heading label { min-width: 180px; }
+.support-panel { border-left: 3px solid #a26a1b; padding-left: 18px; background: #f0f4f0; }
+.support-panel h3 { margin-bottom: 8px; font-size: 14px; }
+.support-panel ul { margin: 0 0 18px; padding-left: 20px; }
 label { display: grid; gap: 6px; color: #4c5b53; font-size: 13px; }
 input, select {
   min-height: 40px;

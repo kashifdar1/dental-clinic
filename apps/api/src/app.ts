@@ -17,6 +17,12 @@ import {
   listTenants,
   transitionTenant,
 } from './platform/tenant-service.js'
+import {
+  SupportSessionError,
+  createSupportSession,
+  readSupportSnapshot,
+  revokeSupportSession,
+} from './platform/support-session-service.js'
 import { LocationError, createLocation, listLocations, updateLocation } from './tenancy/location-service.js'
 import { z } from 'zod'
 import {
@@ -637,6 +643,138 @@ export function createApi(options: ApiOptions) {
           .limit(limit)
           .execute()
         return { tenantEvents, securityEvents }
+      },
+    )
+    routes.post(
+      '/v1/platform/tenants/:tenantId/support-sessions',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'Start a short-lived read-only support session',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { tenantId: { type: 'string', format: 'uuid' } },
+            required: ['tenantId'],
+          },
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: { reason: { type: 'string', minLength: 20, maxLength: 500 } },
+            required: ['reason'],
+          },
+          response: {
+            201: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                token: { type: 'string' },
+                tenantId: { type: 'string', format: 'uuid' },
+                tenantName: { type: 'string' },
+                expiresAt: { type: 'string', format: 'date-time' },
+              },
+              required: ['id', 'token', 'tenantId', 'tenantName', 'expiresAt'],
+            },
+            400: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            403: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            404: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            503: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+          },
+        },
+      },
+      async (request, reply) => {
+        if (!options.platformDatabase) return reply.code(503).send({ error: 'platform_database_unavailable' })
+        const { tenantId } = request.params as { tenantId: string }
+        const { reason } = request.body as { reason: string }
+        try {
+          const session = await createSupportSession(
+            options.platformDatabase,
+            request.identity!,
+            { tenantId, reason },
+          )
+          return reply.status(201).send(session)
+        } catch (error) {
+          if (error instanceof SupportSessionError) {
+            const status = error.code === 'forbidden' ? 403 : error.code === 'not_found' ? 404 : 400
+            return reply.status(status).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.get(
+      '/v1/platform/support-sessions/:supportSessionId/snapshot',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'Read a minimal, read-only tenant support snapshot',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { supportSessionId: { type: 'string', format: 'uuid' } },
+            required: ['supportSessionId'],
+          },
+          headers: {
+            type: 'object',
+            properties: { 'x-support-token': { type: 'string' } },
+            required: ['x-support-token'],
+          },
+        },
+      },
+      async (request, reply) => {
+        if (!options.platformDatabase) return reply.code(503).send({ error: 'platform_database_unavailable' })
+        const { supportSessionId } = request.params as { supportSessionId: string }
+        const token = request.headers['x-support-token']
+        if (typeof token !== 'string') return reply.code(403).send({ error: 'forbidden' })
+        try {
+          return await readSupportSnapshot(options.platformDatabase, request.identity!, {
+            supportSessionId,
+            token,
+          })
+        } catch (error) {
+          if (error instanceof SupportSessionError) {
+            const status = error.code === 'forbidden' ? 403 : error.code === 'not_found' ? 404 : 410
+            return reply.status(status).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.delete(
+      '/v1/platform/support-sessions/:supportSessionId',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'End a read-only tenant support session',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { supportSessionId: { type: 'string', format: 'uuid' } },
+            required: ['supportSessionId'],
+          },
+          response: {
+            204: { type: 'null' },
+            403: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            404: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            503: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+          },
+        },
+      },
+      async (request, reply) => {
+        if (!options.platformDatabase) return reply.code(503).send({ error: 'platform_database_unavailable' })
+        const { supportSessionId } = request.params as { supportSessionId: string }
+        try {
+          await revokeSupportSession(options.platformDatabase, request.identity!, supportSessionId)
+          return reply.status(204).send()
+        } catch (error) {
+          if (error instanceof SupportSessionError) {
+            return reply.status(error.code === 'forbidden' ? 403 : 404).send({ error: error.code })
+          }
+          throw error
+        }
       },
     )
     if (options.sessionStore || options.sessionStores) {

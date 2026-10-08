@@ -30,6 +30,25 @@ interface SecurityEvent {
   occurredAt: string
 }
 
+interface SupportSnapshot {
+  tenant: {
+    id: string
+    name: string
+    slug: string
+    lifecycle_state: string
+  }
+  locations: Array<{ id: string; name: string; slug: string; timezone: string }>
+  memberships: Array<{
+    membershipId: string
+    email: string
+    displayName: string
+    status: string
+    role?: string
+    scope?: string
+    locationId?: string
+  }>
+}
+
 const auth = new BrowserIdentityClient({
   realm: 'platform',
   authority: import.meta.env.VITE_PLATFORM_OIDC_AUTHORITY,
@@ -57,6 +76,15 @@ export function App() {
   const [auditTenantId, setAuditTenantId] = useState('')
   const [tenantEvents, setTenantEvents] = useState<TenantAuditEvent[]>([])
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([])
+  const [supportReason, setSupportReason] = useState('')
+  const [supportSession, setSupportSession] = useState<{
+    id: string
+    token: string
+    tenantId: string
+    tenantName: string
+    expiresAt: string
+  } | null>(null)
+  const [supportSnapshot, setSupportSnapshot] = useState<SupportSnapshot | null>(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -120,6 +148,39 @@ export function App() {
     }
   }
 
+  async function startSupportSession(tenant: TenantSummary) {
+    setMessage('')
+    try {
+      const session = await auth.request<NonNullable<typeof supportSession>>(
+        `/v1/platform/tenants/${tenant.id}/support-sessions`,
+        { method: 'POST', body: JSON.stringify({ reason: supportReason }) },
+      )
+      setSupportSession(session)
+      const snapshot = await auth.request<SupportSnapshot>(
+        `/v1/platform/support-sessions/${session.id}/snapshot`,
+        { headers: { 'x-support-token': session.token } },
+      )
+      setSupportSnapshot(snapshot)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to start support session')
+    }
+  }
+
+  async function endSupportSession() {
+    if (!supportSession) return
+    try {
+      await auth.request(`/v1/platform/support-sessions/${supportSession.id}`, {
+        method: 'DELETE',
+      })
+      setMessage('Support session ended.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to end support session')
+    } finally {
+      setSupportSession(null)
+      setSupportSnapshot(null)
+    }
+  }
+
   const filteredTenants = tenants.filter((tenant) =>
     `${tenant.name} ${tenant.slug} ${tenant.lifecycle_state}`
       .toLowerCase()
@@ -154,6 +215,7 @@ export function App() {
           <label>Subdomain slug<input required minLength={1} value={slug} onChange={(event) => setSlug(event.target.value)} /></label>
           <button type="submit">Create draft tenant</button>
         </form>
+        <label className="support-reason">Support access reason<input minLength={20} maxLength={500} value={supportReason} onChange={(event) => setSupportReason(event.target.value)} placeholder="Explain the support request (20 characters minimum)" /></label>
         {message && <p role="status">{message}</p>}
         <div className="table-scroll">
           <table>
@@ -168,6 +230,7 @@ export function App() {
                       {[tenant.lifecycle_state, ...transitions[tenant.lifecycle_state]].map((state) => <option key={state} value={state}>{state}</option>)}
                     </select>
                     <button disabled={nextState[tenant.id] === tenant.lifecycle_state} onClick={() => void saveLifecycle(tenant)}>Save</button>
+                    <button className="quiet-button" disabled={supportReason.trim().length < 20 || Boolean(supportSession)} onClick={() => void startSupportSession(tenant)}>Read-only support</button>
                   </div>
                 </td>
               </tr>
@@ -176,6 +239,17 @@ export function App() {
           {filteredTenants.length === 0 && <p className="empty-state">No tenants match.</p>}
         </div>
       </section>
+      {supportSession && supportSnapshot && <section aria-labelledby="support-heading" className="support-panel">
+        <div className="audit-heading">
+          <div><h2 id="support-heading">Read-only support view: {supportSnapshot.tenant.name}</h2><p>Expires {new Date(supportSession.expiresAt).toLocaleTimeString()}</p></div>
+          <button className="danger-button" onClick={() => void endSupportSession()}>End support view</button>
+        </div>
+        <p>Reason: {supportReason || 'Recorded with the support session'}</p>
+        <h3>Locations</h3>
+        <ul>{supportSnapshot.locations.map((location) => <li key={location.id}>{location.name} · {location.timezone}</li>)}</ul>
+        <h3>Management memberships</h3>
+        <ul>{supportSnapshot.memberships.map((member) => <li key={member.membershipId}>{member.displayName} · {member.role ?? 'No role'} · {member.status}</li>)}</ul>
+      </section>}
       <section aria-labelledby="audit-heading">
         <div className="audit-heading">
           <h2 id="audit-heading">Audit events</h2>
