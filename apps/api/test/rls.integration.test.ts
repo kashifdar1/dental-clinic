@@ -3,9 +3,12 @@ import { randomUUID } from 'node:crypto'
 import { Pool } from 'pg'
 import { createSessionStore } from '../src/auth/session-store.js'
 import { recordSecurityEvent } from '../src/audit/security-events.js'
+import { createTenant, listTenants, transitionTenant, TenantLifecycleError } from '../src/platform/tenant-service.js'
 import { acceptInvitation, createInvitation } from '../src/tenancy/invitation-service.js'
+import { createLocation, listLocations, updateLocation } from '../src/tenancy/location-service.js'
 import { createDatabase } from '../src/database.js'
 import { withTenant } from '../src/tenant/with-tenant.js'
+import { createApi } from '../src/app.js'
 
 const applicationUrl = process.env.RLS_TEST_APP_DATABASE_URL
 const platformUrl = process.env.RLS_TEST_PLATFORM_DATABASE_URL
@@ -24,6 +27,44 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
   const bootstrap = new Pool({ connectionString: bootstrapUrl })
   const application = createDatabase(applicationUrl)
   const platform = createDatabase(platformUrl)
+  const api = createApi({
+    checkDatabase: application.check,
+    tenantDatabase: application.database,
+    platformDatabase: platform.database,
+    logger: false,
+    authenticator: {
+      async authenticate(token) {
+        if (token === 'platform-test-token') {
+          return {
+            subject: 'platform-admin-123',
+            realm: 'platform',
+            email: 'platform@example.test',
+            emailVerified: true,
+            mfaVerified: true,
+          }
+        }
+        if (token === 'tenant-owner-test-token') {
+          return {
+            subject: 'tenant-owner-123',
+            realm: 'tenant',
+            email: 'owner@example.test',
+            emailVerified: true,
+            mfaVerified: false,
+          }
+        }
+        return null
+      },
+    },
+    isActivePlatformStaff: async (subject) => {
+      const staff = await platform.database
+        .selectFrom('platform_staff')
+        .select('id')
+        .where('identity_subject', '=', subject)
+        .where('status', '=', 'active')
+        .executeTakeFirst()
+      return Boolean(staff)
+    },
+  })
 
   beforeAll(async () => {
     await bootstrap.query(
@@ -62,7 +103,7 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
   })
 
   afterAll(async () => {
-    await Promise.all([bootstrap.end(), application.close(), platform.close()])
+    await Promise.all([api.close(), bootstrap.end(), application.close(), platform.close()])
   })
 
   it('limits tenant reads and rejects cross-tenant writes in a scoped transaction', async () => {
@@ -78,7 +119,8 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
     )
 
     expect(visibleTenants.map((row) => row.id)).toEqual([tenantA])
-    expect(visibleLocations.map((row) => row.id)).toEqual([locationA])
+    expect(visibleLocations.map((row) => row.id)).toContain(locationA)
+    expect(visibleLocations.map((row) => row.id)).not.toContain(locationB)
 
     await expect(
       withTenant(application.database, tenantA, async (transaction) => {
@@ -317,5 +359,148 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
         .where('event_type', '=', 'platform.authentication_denied')
         .execute(),
     ).rejects.toMatchObject({ code: '42501' })
+  })
+
+  it('provisions tenants with an audited lifecycle and rejects invalid transitions', async () => {
+    const slug = `tenant-${randomUUID()}`
+    const created = await createTenant(platform.database, 'platform-admin-123', {
+      name: 'New Tenant Organization',
+      slug,
+    })
+    expect(created.lifecycleState).toBe('draft')
+
+    await expect(
+      transitionTenant(platform.database, 'platform-admin-123', created.id, 'trial'),
+    ).resolves.toEqual({ id: created.id, lifecycleState: 'trial' })
+    await expect(
+      transitionTenant(platform.database, 'platform-admin-123', created.id, 'active'),
+    ).resolves.toEqual({ id: created.id, lifecycleState: 'active' })
+    await expect(
+      transitionTenant(platform.database, 'platform-admin-123', created.id, 'draft'),
+    ).rejects.toBeInstanceOf(TenantLifecycleError)
+    expect((await listTenants(platform.database)).some((tenant) => tenant.id === created.id)).toBe(true)
+
+    const audit = await platform.database
+      .selectFrom('audit_events')
+      .select(['action', 'resource_id'])
+      .where('tenant_id', '=', created.id)
+      .execute()
+    expect(audit.map((event) => event.action).sort()).toEqual([
+      'tenant.created',
+      'tenant.lifecycle_changed',
+      'tenant.lifecycle_changed',
+    ].sort())
+  })
+
+  it('creates and updates locations only within the active tenant context', async () => {
+    const location = await createLocation(application.database, 'tenant-owner-123', {
+      tenantId: tenantA,
+      name: 'Second Location',
+      slug: `second-${randomUUID()}`,
+      timezone: 'Asia/Karachi',
+    })
+    expect((await listLocations(application.database, tenantA)).map((item) => item.id)).toContain(location.id)
+
+    const updated = await updateLocation(application.database, 'tenant-owner-123', {
+      tenantId: tenantA,
+      locationId: location.id,
+      name: 'Renamed Location',
+      slug: `renamed-${randomUUID()}`,
+      timezone: 'Asia/Dubai',
+    })
+    expect(updated).toMatchObject({ id: location.id, tenantId: tenantA, name: 'Renamed Location' })
+    expect((await listLocations(application.database, tenantB)).map((item) => item.id)).toEqual([
+      locationB,
+    ])
+  })
+
+  it('serves platform provisioning and tenant location routes behind role/RLS guards', async () => {
+    const tenantResponse = await api.inject({
+      method: 'POST',
+      url: '/v1/platform/tenants',
+      headers: { authorization: 'Bearer platform-test-token' },
+      payload: { name: 'Route-created Tenant', slug: `route-${randomUUID()}` },
+    })
+    expect(tenantResponse.statusCode).toBe(201)
+    const tenant = tenantResponse.json()
+
+    const transition = await api.inject({
+      method: 'PATCH',
+      url: `/v1/platform/tenants/${tenant.id}/lifecycle`,
+      headers: { authorization: 'Bearer platform-test-token' },
+      payload: { lifecycleState: 'trial' },
+    })
+    expect(transition.statusCode).toBe(200)
+    expect(transition.json()).toMatchObject({ id: tenant.id, lifecycleState: 'trial' })
+    const auditResponse = await api.inject({
+      method: 'GET',
+      url: `/v1/platform/audit-events?tenantId=${tenant.id}`,
+      headers: { authorization: 'Bearer platform-test-token' },
+    })
+    expect(auditResponse.statusCode).toBe(200)
+    expect(auditResponse.json().tenantEvents.map((event: { action: string }) => event.action)).toEqual(
+      expect.arrayContaining(['tenant.created', 'tenant.lifecycle_changed']),
+    )
+
+    const createdLocation = await api.inject({
+      method: 'POST',
+      url: '/v1/tenant/locations',
+      headers: {
+        authorization: 'Bearer tenant-owner-test-token',
+        'x-tenant-id': tenantA,
+      },
+      payload: {
+        name: 'API-created Location',
+        slug: `api-${randomUUID()}`,
+        timezone: 'Asia/Karachi',
+      },
+    })
+    expect(createdLocation.statusCode).toBe(201)
+    expect(createdLocation.json().tenantId).toBe(tenantA)
+
+    const crossTenant = await api.inject({
+      method: 'POST',
+      url: '/v1/tenant/locations',
+      headers: {
+        authorization: 'Bearer tenant-owner-test-token',
+        'x-tenant-id': tenantB,
+      },
+      payload: {
+        name: 'Forbidden Location',
+        slug: `forbidden-${randomUUID()}`,
+        timezone: 'Asia/Karachi',
+      },
+    })
+    expect(crossTenant.statusCode).toBe(403)
+
+    const membershipList = await api.inject({
+      method: 'GET',
+      url: '/v1/tenant/memberships',
+      headers: {
+        authorization: 'Bearer tenant-owner-test-token',
+        'x-tenant-id': tenantA,
+      },
+    })
+    expect(membershipList.statusCode).toBe(200)
+    expect(membershipList.json().map((membership: { email: string }) => membership.email)).toContain(
+      'owner@example.test',
+    )
+  })
+
+  it('discovers only tenants attached to the authenticated membership', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/v1/tenant/tenants',
+      headers: { authorization: 'Bearer tenant-owner-test-token' },
+    })
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual([
+      {
+        tenantId: tenantA,
+        name: 'Tenant A',
+        slug: `test-${tenantA}`,
+        roles: ['tenant_owner'],
+      },
+    ])
   })
 })

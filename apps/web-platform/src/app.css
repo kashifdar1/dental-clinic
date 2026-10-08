@@ -1,0 +1,81 @@
+:root {
+  color-scheme: light;
+  font-family: 'DM Sans', 'Trebuchet MS', sans-serif;
+  color: #202724;
+  background: #f4f7f4;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.platform-page {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 36px 0 64px;
+}
+
+.platform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #d8dfda;
+}
+
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 4px; font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; }
+.platform-header p { margin: 0; color: #5f6c65; }
+section { padding-top: 28px; }
+h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; }
+h2 span { color: #68766f; font-size: 14px; font-weight: 500; }
+
+.tenant-create {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.7fr) auto;
+  align-items: end;
+  gap: 14px;
+  padding: 16px 0 24px;
+  border-bottom: 1px solid #d8dfda;
+}
+.tenant-search { max-width: 360px; margin: 12px 0 6px; }
+.audit-heading { display: flex; align-items: end; gap: 14px; justify-content: space-between; }
+.audit-heading h2 { margin-right: auto; }
+.audit-heading label { min-width: 180px; }
+label { display: grid; gap: 6px; color: #4c5b53; font-size: 13px; }
+input, select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #bfc9c2;
+  border-radius: 4px;
+  background: #fff;
+  color: #202724;
+}
+button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #206e59;
+  border-radius: 4px;
+  background: #206e59;
+  color: #fff;
+}
+button:disabled { cursor: default; opacity: 0.5; }
+.quiet-button { border-color: #bfc9c2; background: transparent; color: #34433b; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 12px 10px; border-bottom: 1px solid #e0e6e2; white-space: nowrap; }
+th { color: #617067; font-size: 12px; font-weight: 600; }
+.lifecycle-control { display: flex; gap: 8px; }
+.lifecycle-control select { min-width: 120px; }
+.lifecycle-control button { min-height: 36px; padding: 6px 10px; }
+.empty-state { padding: 22px 10px; color: #65736b; }
+
+@media (max-width: 680px) {
+  .platform-page { width: min(100% - 28px, 1120px); padding-top: 24px; }
+  .tenant-create { grid-template-columns: 1fr; }
+  .platform-header { align-items: flex-start; }
+  .audit-heading { align-items: stretch; flex-direction: column; }
+}

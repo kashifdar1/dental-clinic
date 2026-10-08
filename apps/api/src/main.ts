@@ -23,6 +23,7 @@ const app = createApi({
   },
   secureCookies: config.nodeEnv === 'production',
   tenantDatabase: database.database,
+  platformDatabase: platformDatabase?.database,
   isActivePlatformStaff: async (subject) => {
     if (!platformDatabase) return false
     const staff = await platformDatabase.database

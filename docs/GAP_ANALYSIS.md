@@ -51,20 +51,10 @@ operate tenants from a separate console; tenant users see only their authorized 
 
 ### In scope
 
-- Tenant and location lifecycle, memberships, invitations, RBAC and audit.
-- Self-onboarding, subscriptions, entitlements, usage metering and provider-agnostic billing hooks.
-- Clinic service catalog, practitioner directory, schedules, slots, appointment requests and bookings.
-- Minimal contacts and per-channel consent.
-- Public sites, platform subdomains, custom-domain verification and managed TLS.
-- WhatsApp inbound/outbound messaging, reminders, staff inbox, deterministic automation and handoff.
-- Stable APIs/webhooks and an opaque external-reference seam for future HIS integration.
 
 ### Out of scope
 
-- Medical records, clinical notes, diagnoses, prescriptions, results, visit documentation and patient
   billing. A separate HIS owns these concerns.
-- Medical advice from the WhatsApp bot or AI assistant.
-- Cross-tenant patient/contact identity linking.
 
 Production contact data is limited to name, E.164 phone, optional email, preferred language, consent
 evidence and an optional `external_patient_ref`. Message bodies are sensitive and require tenant
@@ -88,15 +78,9 @@ Platform plans and clinic services must remain separate concepts: plans/add-ons/
 | Vendors | Queue, storage, secrets, edge, WhatsApp, billing and AI behind ports | Required |
 | Delivery | Infrastructure as code, development/staging/production environments and gated CI | Required |
 
-The target module boundaries are `tenancy`, `identity`, `audit`, `media`, `catalog`, `directory`,
 `scheduling`, `contacts`, `billing`, `site`, `domains`, `messaging`, `notifications`, `platform-admin`
-and an explicit integration boundary. Modules expose public facades and domain events; they must not
 import another module's internals.
-
 ### External decisions and constraints to re-verify
-
-- WhatsApp uses Meta Embedded Signup v4 under the Tech Provider route unless an ADR selects a partner
-  route. Tenants own their WABA and normally pay Meta directly.
 - Start Meta Business Verification and App Review as a Phase 0 long-lead activity.
 - Webhooks require raw-body signature verification, fast acknowledgement, deduplication and async work.
 - WhatsApp logistics only: never send diagnoses, prescriptions or results.
@@ -230,6 +214,10 @@ P0 may add `fastify`, `@fastify/cookie`, `@fastify/swagger`, `jose`, `zod`, `kys
 the public-app shell. Use npm workspaces to preserve the existing lockfile and root demo. Add
 infrastructure-provider SDKs only in the phase that first uses them.
 
+P1 may add `oidc-client-ts` for standard Authorization Code + PKCE login in the tenant and platform
+consoles. OIDC state and temporary tokens must use session storage only; the API exchanges a verified
+access token for its own HttpOnly server session.
+
 - [x] Preserve the demo on `feature/clinic-hub-public-directory`; retain it as the reference branch.
 - [x] Record selected architecture defaults and unresolved launch gates in `docs/adr/`.
 - [x] Create the target monorepo structure with `apps/api`, `apps/worker`, `apps/web-console`,
@@ -257,9 +245,15 @@ resource was created in this P0 slice.
 
 ### P1 — Tenant core, catalog and booking foundation
 
-- [ ] Implement tenants, locations, lifecycle states, memberships, invitations and scoped role assignments.
-- [ ] Build the platform operator console for tenant creation, suspension, closure, audit viewing and
-   controlled impersonation.
+The P1 browser consoles may use `oidc-client-ts` for Authorization Code + PKCE. Keep temporary tokens
+in session storage, exchange the access token for a server session, and keep tenant/platform issuers
+and clients separate.
+
+- [x] Implement tenants, locations, lifecycle states, memberships, invitations and scoped role assignments.
+- [x] Build the initial platform operator console for tenant listing, creation, lifecycle transitions,
+   cross-tenant search, and audit/security-event viewing.
+- [ ] Add time-boxed, reasoned, audited, read-only support impersonation. Platform staff must not gain
+   tenant write permissions through support access.
 - [ ] Replace `Patient` and `VisitNote` with contacts, communication consents and optional
    `external_patient_ref`.
 - [ ] Implement practitioners as people with location assignments, registration numbers and verification.
@@ -306,24 +300,9 @@ booking workflow with reliable reminders and safe staff handoff.
 
 ## The next development slice
 
-The next implementation work should be **P0 foundation**, not WhatsApp, public-site expansion, or more
-demo entities.
-
-Recommended first pull request:
-
-1. Create the monorepo skeleton; the demo remains preserved on its reference branch.
-2. Add shared TypeScript, lint and test configuration.
-3. Add an API skeleton with configuration validation, redacted logging, request IDs, error responses,
-   health endpoints and generated OpenAPI.
-4. Add PostgreSQL migration tooling and the initial tenant/location/membership tables.
-5. Add forced RLS, restricted database roles, `withTenant()` and a two-tenant isolation test.
-6. Add CI gates for typecheck, lint, unit tests, database integration tests, RLS catalog validation and
-   the isolation suite.
-
-Keep this first slice free of catalog, scheduling, billing and WhatsApp behavior. Its purpose is to
-prove the security, persistence and module boundaries that every later feature depends on.
-Use the ADR defaults with environment-driven region/domain placeholders. Do not create cloud accounts,
-register domains, connect real WhatsApp tenants, or charge money as part of local scaffolding.
+Continue with P1 in dependency order. The first tenant-core/API/console slice is complete; the next
+slice is read-only support access and minimal contacts/consents, followed by multi-location practitioner
+assignments and catalog/scheduling. Do not add clinical records, diagnoses, prescriptions, or visit notes.
 
 ## Validation baseline
 
@@ -347,8 +326,11 @@ At the time of this review:
    boundaries, invitations, append-only audit/security events, PostgreSQL RLS, and CI integration checks.
 - Validation: demo 65 tests; API 170 tests; PostgreSQL integration 7 tests; workspace and demo builds
    passed; lint/typecheck passed; npm audit reported zero vulnerabilities.
+- P1 tenant lifecycle/location API, scoped memberships and invitations, tenant/platform consoles,
+   tenant provisioning, lifecycle transitions, search, and audit viewing are implemented locally.
+- Controlled support impersonation and contacts, multi-location directory, catalog, and scheduling remain.
 - No production resources, real domains, Meta accounts, billing, or patient data were touched.
-- Next recommended priority: P1 tenant core, locations, memberships and platform operator console.
+- Next recommended priority: P1 controlled read-only support access and minimal contacts/consents.
 - Cognito app-client setup and initial platform-staff provisioning remain explicit identity deployment
    gates; production region/data-residency remains the real-patient-data gate.
 - Proposals were initially selected autonomously without owner approval; no priority overrides or skipped

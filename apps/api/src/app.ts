@@ -3,7 +3,7 @@ import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import type { Authenticator } from '@clinic-hub/shared'
 import type { Kysely } from 'kysely'
-import { requireTenantMembership } from './access/tenant-permissions.js'
+import { requireTenantMembership, requireTenantPermission } from './access/tenant-permissions.js'
 import { requirePlatformStaff } from './auth/require-platform-staff.js'
 import { requireIdentity } from './auth/require-identity.js'
 import { registerSessionRoutes } from './auth/session-routes.js'
@@ -11,6 +11,21 @@ import type { SessionStore } from './auth/session-store.js'
 import type { ApiDatabase } from './db/schema.js'
 import { InvitationError, acceptInvitation, createInvitation } from './tenancy/invitation-service.js'
 import type { SecurityEventInput } from './audit/security-events.js'
+import {
+  TenantLifecycleError,
+  createTenant,
+  listTenants,
+  transitionTenant,
+} from './platform/tenant-service.js'
+import { LocationError, createLocation, listLocations, updateLocation } from './tenancy/location-service.js'
+import { z } from 'zod'
+import {
+  MembershipError,
+  listAccessibleTenants,
+  listMemberships,
+  listPendingInvitations,
+  revokeInvitation,
+} from './tenancy/membership-service.js'
 
 interface ApiOptions {
   checkDatabase: () => Promise<void>
@@ -19,6 +34,7 @@ interface ApiOptions {
   sessionStores?: Partial<Record<'tenant' | 'platform', SessionStore>>
   secureCookies?: boolean
   tenantDatabase?: Kysely<ApiDatabase>
+  platformDatabase?: Kysely<ApiDatabase>
   isActivePlatformStaff?: (subject: string) => Promise<boolean>
   recordSecurityEvent?: (event: SecurityEventInput) => Promise<void>
   logger?: FastifyServerOptions['logger']
@@ -172,6 +188,8 @@ export function createApi(options: ApiOptions) {
     })
     const tenantUnavailable: preHandlerHookHandler = async (_request, reply) =>
       reply.code(503).send({ error: 'authorization_unavailable' })
+    const platformDatabaseUnavailable: preHandlerHookHandler = async (_request, reply) =>
+      reply.code(503).send({ error: 'platform_database_unavailable' })
     routes.get(
       '/v1/tenant/me',
       {
@@ -201,30 +219,64 @@ export function createApi(options: ApiOptions) {
       },
       async (request) => ({ realm: 'tenant', tenantId: request.tenantId }),
     )
+    routes.get(
+      '/v1/tenant/tenants',
+      {
+        preHandler: options.tenantDatabase ? tenantRealmGuard : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'List tenants available to the authenticated identity',
+          security: [{ bearerAuth: [] }],
+          response: {
+            200: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  tenantId: { type: 'string', format: 'uuid' },
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  roles: { type: 'array', items: { type: 'string' } },
+                },
+                required: ['tenantId', 'name', 'slug', 'roles'],
+              },
+            },
+            503: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
+          },
+        },
+      },
+      async (request) =>
+        listAccessibleTenants(options.tenantDatabase!, request.identity!.subject),
+    )
     const platformRealmGuard = requireIdentity(options.authenticator ?? rejectIdentity, {
       sessionStore: options.sessionStore,
       sessionStores: options.sessionStores,
       secureCookies: options.secureCookies,
     })
+    const platformStaffGuard: preHandlerHookHandler[] = [
+      platformRealmGuard,
+      requirePlatformStaff(
+        options.isActivePlatformStaff ?? (async () => false),
+        options.recordSecurityEvent
+          ? (event) =>
+              options.recordSecurityEvent!({
+                eventType: 'platform.authorization_denied',
+                actorSubject: event.actorSubject,
+                identityRealm: event.identityRealm,
+                requestId: event.requestId,
+                metadata: { reason: event.reason },
+              })
+          : undefined,
+      ),
+    ]
     routes.get(
       '/v1/platform/me',
       {
-        preHandler: [
-          platformRealmGuard,
-          requirePlatformStaff(
-            options.isActivePlatformStaff ?? (async () => false),
-            options.recordSecurityEvent
-              ? (event) =>
-                  options.recordSecurityEvent!({
-                    eventType: 'platform.authorization_denied',
-                    actorSubject: event.actorSubject,
-                    identityRealm: event.identityRealm,
-                    requestId: event.requestId,
-                    metadata: { reason: event.reason },
-                  })
-              : undefined,
-          ),
-        ],
+        preHandler: platformStaffGuard,
         schema: {
           tags: ['platform'],
           summary: 'Return the active platform staff context',
@@ -239,6 +291,353 @@ export function createApi(options: ApiOptions) {
         },
       },
       async () => ({ realm: 'platform' }),
+    )
+    routes.get(
+      '/v1/platform/tenants',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'List tenants for platform operations',
+          security: [{ bearerAuth: [] }],
+          response: {
+            200: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', format: 'uuid' },
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  lifecycle_state: { type: 'string' },
+                  created_at: { type: 'string', format: 'date-time' },
+                },
+                required: ['id', 'name', 'slug', 'lifecycle_state', 'created_at'],
+              },
+            },
+            503: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
+          },
+        },
+      },
+      async () => listTenants(options.platformDatabase!),
+    )
+    routes.post(
+      '/v1/platform/tenants',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'Provision a tenant in draft state',
+          security: [{ bearerAuth: [] }],
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              name: { type: 'string', minLength: 2, maxLength: 160 },
+              slug: { type: 'string', minLength: 1, maxLength: 63 },
+            },
+            required: ['name', 'slug'],
+          },
+          response: {
+            201: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                name: { type: 'string' },
+                slug: { type: 'string' },
+                lifecycleState: { type: 'string', enum: ['draft'] },
+              },
+              required: ['id', 'name', 'slug', 'lifecycleState'],
+            },
+            400: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
+            409: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
+            503: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        const body = request.body as { name: string; slug: string }
+        try {
+          const created = await createTenant(
+            options.platformDatabase!,
+            request.identity!.subject,
+            body,
+          )
+          return reply.status(201).send(created)
+        } catch (error) {
+          if (error instanceof TenantLifecycleError) {
+            return reply.status(error.code === 'slug_unavailable' ? 409 : 400).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.get(
+      '/v1/tenant/locations',
+      {
+        preHandler: options.tenantDatabase
+          ? [tenantRealmGuard, requireTenantMembership(options.tenantDatabase)]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'List locations visible to the active tenant member',
+          security: [{ bearerAuth: [] }],
+          response: {
+            200: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', format: 'uuid' },
+                  tenant_id: { type: 'string', format: 'uuid' },
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  timezone: { type: 'string' },
+                },
+                required: ['id', 'tenant_id', 'name', 'slug', 'timezone'],
+              },
+            },
+          },
+        },
+      },
+      async (request) => listLocations(options.tenantDatabase!, request.tenantId!),
+    )
+    routes.post(
+      '/v1/tenant/locations',
+      {
+        preHandler: options.tenantDatabase
+          ? [
+              tenantRealmGuard,
+              requireTenantPermission(options.tenantDatabase, 'location.manage'),
+            ]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'Create a location for the active tenant',
+          security: [{ bearerAuth: [] }],
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              name: { type: 'string', minLength: 2, maxLength: 160 },
+              slug: { type: 'string', minLength: 1, maxLength: 63 },
+              timezone: { type: 'string', minLength: 1 },
+            },
+            required: ['name', 'slug', 'timezone'],
+          },
+          response: {
+            201: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                tenantId: { type: 'string', format: 'uuid' },
+                name: { type: 'string' },
+                slug: { type: 'string' },
+                timezone: { type: 'string' },
+              },
+              required: ['id', 'tenantId', 'name', 'slug', 'timezone'],
+            },
+            400: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            403: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            409: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            503: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+          },
+        },
+      },
+      async (request, reply) => {
+        try {
+          const body = request.body as { name: string; slug: string; timezone: string }
+          const created = await createLocation(
+            options.tenantDatabase!,
+            request.identity!.subject,
+            { tenantId: request.tenantId!, ...body },
+          )
+          return reply.status(201).send(created)
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            return reply.status(400).send({ error: 'invalid_location' })
+          }
+          if (error instanceof LocationError) {
+            return reply.status(409).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.patch(
+      '/v1/tenant/locations/:locationId',
+      {
+        preHandler: options.tenantDatabase
+          ? [
+              tenantRealmGuard,
+              requireTenantPermission(options.tenantDatabase, 'location.manage'),
+            ]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'Update a location in the active tenant',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { locationId: { type: 'string', format: 'uuid' } },
+            required: ['locationId'],
+          },
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              name: { type: 'string', minLength: 2, maxLength: 160 },
+              slug: { type: 'string', minLength: 1, maxLength: 63 },
+              timezone: { type: 'string', minLength: 1 },
+            },
+            required: ['name', 'slug', 'timezone'],
+          },
+        },
+      },
+      async (request, reply) => {
+        const { locationId } = request.params as { locationId: string }
+        if (request.locationId !== locationId) {
+          return reply.status(400).send({ error: 'location_context_mismatch' })
+        }
+        try {
+          const body = request.body as { name: string; slug: string; timezone: string }
+          return await updateLocation(options.tenantDatabase!, request.identity!.subject, {
+            tenantId: request.tenantId!,
+            locationId,
+            ...body,
+          })
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            return reply.status(400).send({ error: 'invalid_location' })
+          }
+          if (error instanceof LocationError) {
+            return reply.status(error.code === 'not_found' ? 404 : 409).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.patch(
+      '/v1/platform/tenants/:tenantId/lifecycle',
+      {
+        preHandler: options.platformDatabase
+          ? platformStaffGuard
+          : async (_request, reply) => reply.code(503).send({ error: 'platform_database_unavailable' }),
+        schema: {
+          tags: ['platform'],
+          summary: 'Change tenant lifecycle state',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { tenantId: { type: 'string', format: 'uuid' } },
+            required: ['tenantId'],
+          },
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              lifecycleState: {
+                type: 'string',
+                enum: ['draft', 'trial', 'active', 'past_due', 'suspended', 'closed'],
+              },
+            },
+            required: ['lifecycleState'],
+          },
+        },
+      },
+      async (request, reply) => {
+        const { tenantId } = request.params as { tenantId: string }
+        const { lifecycleState } = request.body as {
+          lifecycleState: 'draft' | 'trial' | 'active' | 'past_due' | 'suspended' | 'closed'
+        }
+        try {
+          return await transitionTenant(
+            options.platformDatabase!,
+            request.identity!.subject,
+            tenantId,
+            lifecycleState,
+          )
+        } catch (error) {
+          if (error instanceof TenantLifecycleError) {
+            const status = error.code === 'not_found' ? 404 : error.code === 'invalid_transition' ? 409 : 400
+            return reply.status(status).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.get(
+      '/v1/platform/audit-events',
+      {
+        preHandler: options.platformDatabase ? platformStaffGuard : platformDatabaseUnavailable,
+        schema: {
+          tags: ['platform'],
+          summary: 'Read platform and tenant audit events',
+          security: [{ bearerAuth: [] }],
+          querystring: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              tenantId: { type: 'string', format: 'uuid' },
+              limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+            },
+          },
+        },
+      },
+      async (request) => {
+        const query = request.query as { tenantId?: string; limit?: number }
+        const limit = query.limit ?? 50
+        const tenantEventsQuery = options.platformDatabase!
+          .selectFrom('audit_events')
+          .leftJoin('tenants', 'tenants.id', 'audit_events.tenant_id')
+          .select([
+            'audit_events.id',
+            'audit_events.tenant_id as tenantId',
+            'tenants.name as tenantName',
+            'audit_events.actor_subject as actorSubject',
+            'audit_events.action',
+            'audit_events.resource_type as resourceType',
+            'audit_events.resource_id as resourceId',
+            'audit_events.metadata',
+            'audit_events.occurred_at as occurredAt',
+          ])
+          .orderBy('audit_events.occurred_at', 'desc')
+          .limit(limit)
+        const tenantEvents = query.tenantId
+          ? await tenantEventsQuery.where('audit_events.tenant_id', '=', query.tenantId).execute()
+          : await tenantEventsQuery.execute()
+        const securityEvents = await options.platformDatabase!
+          .selectFrom('security_events')
+          .select([
+            'id',
+            'event_type as eventType',
+            'actor_subject as actorSubject',
+            'identity_realm as identityRealm',
+            'request_id as requestId',
+            'metadata',
+            'occurred_at as occurredAt',
+          ])
+          .orderBy('occurred_at', 'desc')
+          .limit(limit)
+          .execute()
+        return { tenantEvents, securityEvents }
+      },
     )
     if (options.sessionStore || options.sessionStores) {
       await registerSessionRoutes(routes, {
@@ -347,6 +746,123 @@ export function createApi(options: ApiOptions) {
           if (error instanceof InvitationError) {
             const status = error.code === 'forbidden' ? 403 : 400
             return reply.status(status).send({ error: error.code })
+          }
+          throw error
+        }
+      },
+    )
+    routes.get(
+      '/v1/tenant/memberships',
+      {
+        preHandler: options.tenantDatabase
+          ? [
+              tenantRealmGuard,
+              requireTenantPermission(options.tenantDatabase, 'member.invite'),
+            ]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'List memberships and scoped roles for the active tenant',
+          security: [{ bearerAuth: [] }],
+          response: {
+            200: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  membershipId: { type: 'string', format: 'uuid' },
+                  email: { type: 'string', format: 'email' },
+                  displayName: { type: 'string' },
+                  status: { type: 'string', enum: ['invited', 'active', 'disabled'] },
+                  role: { type: 'string' },
+                  scope: { type: 'string' },
+                  locationId: { type: 'string', format: 'uuid' },
+                },
+                required: ['membershipId', 'email', 'displayName', 'status'],
+              },
+            },
+          },
+        },
+      },
+      async (request) => listMemberships(options.tenantDatabase!, request.tenantId!),
+    )
+    routes.get(
+      '/v1/tenant/invitations',
+      {
+        preHandler: options.tenantDatabase
+          ? [
+              tenantRealmGuard,
+              requireTenantPermission(options.tenantDatabase, 'member.invite'),
+            ]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'List pending invitations for the active tenant',
+          security: [{ bearerAuth: [] }],
+          response: {
+            200: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', format: 'uuid' },
+                  email: { type: 'string', format: 'email' },
+                  role_key: { type: 'string' },
+                  scope: { type: 'string' },
+                  scope_location_id: { type: 'string', format: 'uuid' },
+                  invited_by_subject: { type: 'string' },
+                  expires_at: { type: 'string', format: 'date-time' },
+                  created_at: { type: 'string', format: 'date-time' },
+                },
+                required: ['id', 'email', 'role_key', 'scope', 'invited_by_subject', 'expires_at', 'created_at'],
+              },
+            },
+          },
+        },
+      },
+      async (request) => listPendingInvitations(options.tenantDatabase!, request.tenantId!),
+    )
+    routes.delete(
+      '/v1/tenant/invitations/:invitationId',
+      {
+        preHandler: options.tenantDatabase
+          ? [
+              tenantRealmGuard,
+              requireTenantPermission(options.tenantDatabase, 'member.invite'),
+            ]
+          : tenantUnavailable,
+        schema: {
+          tags: ['tenant'],
+          summary: 'Revoke a pending invitation',
+          security: [{ bearerAuth: [] }],
+          params: {
+            type: 'object',
+            properties: { invitationId: { type: 'string', format: 'uuid' } },
+            required: ['invitationId'],
+          },
+          response: {
+            204: { type: 'null' },
+            404: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+            400: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
+          },
+        },
+      },
+      async (request, reply) => {
+        const { invitationId } = request.params as { invitationId: string }
+        try {
+          await revokeInvitation(
+            options.tenantDatabase!,
+            request.identity!.subject,
+            request.tenantId!,
+            invitationId,
+          )
+          return reply.status(204).send()
+        } catch (error) {
+          if (error instanceof MembershipError) {
+            return reply.status(404).send({ error: error.code })
+          }
+          if (error instanceof z.ZodError) {
+            return reply.status(400).send({ error: 'invalid_invitation_id' })
           }
           throw error
         }

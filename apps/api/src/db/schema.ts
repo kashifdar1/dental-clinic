@@ -2,11 +2,19 @@ import type { ColumnType } from 'kysely'
 
 type Timestamp = ColumnType<Date, string | undefined, string | undefined>
 
+export type TenantLifecycleState =
+  | 'draft'
+  | 'trial'
+  | 'active'
+  | 'past_due'
+  | 'suspended'
+  | 'closed'
+
 export interface TenantsTable {
   id: string
   name: string
   slug: string
-  lifecycle_state: string
+  lifecycle_state: TenantLifecycleState
   created_at: Timestamp
 }
 

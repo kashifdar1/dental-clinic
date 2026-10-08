@@ -1,0 +1,26 @@
+:root { color-scheme: light; font-family: 'DM Sans', 'Trebuchet MS', sans-serif; color: #202724; background: #f4f7f4; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+.tenant-page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 64px; }
+.tenant-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid #d8dfda; }
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 4px; font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; }
+.tenant-header p { margin: 0; color: #5f6c65; }
+h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; }
+.tenant-picker { display: grid; gap: 6px; max-width: 420px; margin: 24px 0; color: #4c5b53; font-size: 13px; }
+section { padding-top: 24px; border-top: 1px solid #d8dfda; }
+.location-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); align-items: end; gap: 12px; padding: 12px 0 20px; }
+label { display: grid; gap: 6px; color: #4c5b53; font-size: 13px; }
+input, select { min-height: 40px; padding: 8px 10px; border: 1px solid #bfc9c2; border-radius: 4px; background: #fff; color: #202724; }
+button { min-height: 40px; padding: 8px 14px; border: 1px solid #206e59; border-radius: 4px; background: #206e59; color: #fff; }
+.quiet-button { border-color: #bfc9c2; background: transparent; color: #34433b; }
+.danger-button { min-height: 32px; padding: 4px 9px; border-color: #a93c32; background: transparent; color: #8c3027; }
+.table-scroll { overflow-x: auto; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 11px 9px; border-bottom: 1px solid #e0e6e2; white-space: nowrap; }
+th { color: #617067; font-size: 12px; font-weight: 600; }
+td small { display: block; color: #65736b; }
+code { overflow-wrap: anywhere; }
+@media (max-width: 680px) { .tenant-page { width: min(100% - 28px, 1120px); padding-top: 24px; } .tenant-header { align-items: flex-start; } }
