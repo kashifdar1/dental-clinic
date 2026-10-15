@@ -8,6 +8,7 @@ import type {
   PractitionerVerificationStatus,
 } from '../db/schema.js'
 import { appendAuditEvent } from '../audit/append-audit-event.js'
+import { assertEntitlement } from '../billing/entitlement-service.js'
 import { withTenantLocation } from '../tenant/with-tenant.js'
 
 const TenantIdSchema = z.string().uuid()
@@ -86,6 +87,7 @@ export async function createPractitioner(
 
   try {
     await withTenantLocation(database, tenantId, locationId, async (transaction) => {
+      await assertEntitlement(transaction, { tenantId, key: 'practitioners.max', delta: 1 })
       await transaction
         .insertInto('practitioner_locations')
         .values({

@@ -41,6 +41,18 @@ import {
   transitionAppointment,
 } from '../src/tenancy/scheduling-service.js'
 import { createLocation, listLocations, updateLocation } from '../src/tenancy/location-service.js'
+import {
+  changePlan,
+  addSubscriptionAddon,
+  createAddon,
+  createManualBillingProvider,
+  createPlan,
+  publishPlanVersion,
+  readUsage,
+  recordUsage,
+  startSubscription,
+} from '../src/billing/billing-service.js'
+import { assertEntitlement, EntitlementError } from '../src/billing/entitlement-service.js'
 import { createDatabase } from '../src/database.js'
 import { withTenant, withTenantLocation } from '../src/tenant/with-tenant.js'
 import { createApi } from '../src/app.js'
@@ -167,6 +179,23 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
        ON CONFLICT (id) DO NOTHING`,
       [platformStaffId],
     )
+    const allowance = await ensureTestAllowance(platform.database)
+    for (const tenantId of [tenantA, tenantB]) {
+      const open = await platform.database
+        .selectFrom('subscriptions')
+        .select('id')
+        .where('tenant_id', '=', tenantId)
+        .where('status', 'in', ['trialing', 'active', 'past_due', 'suspended'])
+        .executeTakeFirst()
+      if (!open) {
+        await startSubscription(platform.database, 'platform-admin-123', {
+          tenantId,
+          customerRef: `manual:${tenantId}`,
+          planVersionId: allowance.versionId,
+          status: 'active',
+        })
+      }
+    }
   })
 
   afterAll(async () => {
@@ -2604,4 +2633,192 @@ integrationSuite('PostgreSQL tenant row-level security', () => {
       },
     ])
   })
+
+  it('blocks expansion at the plan limit, keeps downgraded data, and bills by operator amount', async () => {
+    const tenant = await createTenant(platform.database, 'platform-admin-123', {
+      name: 'Billing Tenant',
+      slug: `billing-${randomUUID().slice(0, 8)}`,
+    })
+    const roomy = await createPlan(platform.database, {
+      key: `roomy-${randomUUID().slice(0, 8)}`,
+      name: 'Roomy allowance',
+      entitlements: [
+        { key: 'locations.max', limit: 2 },
+        { key: 'domains.custom.max', limit: 1 },
+        { key: 'automation.runs.monthly', includedQuantity: 1, overagePolicy: 'block' },
+      ],
+    })
+    await startSubscription(platform.database, 'platform-admin-123', {
+      tenantId: tenant.id,
+      customerRef: `manual:${tenant.id}`,
+      planVersionId: roomy.versionId,
+      status: 'active',
+    })
+    await createLocation(application.database, 'billing-test', {
+      tenantId: tenant.id,
+      name: 'First Branch',
+      slug: 'first-branch',
+      timezone: 'Asia/Karachi',
+    })
+    await createLocation(application.database, 'billing-test', {
+      tenantId: tenant.id,
+      name: 'Second Branch',
+      slug: 'second-branch',
+      timezone: 'Asia/Karachi',
+    })
+    await expect(createLocation(application.database, 'billing-test', {
+      tenantId: tenant.id,
+      name: 'Third Branch',
+      slug: 'third-branch',
+      timezone: 'Asia/Karachi',
+    })).rejects.toMatchObject({ code: 'entitlement_exceeded' })
+
+    const tight = await publishPlanVersion(platform.database, {
+      planId: roomy.id,
+      entitlements: [{ key: 'locations.max', limit: 1 }],
+    })
+    await changePlan(platform.database, 'platform-admin-123', {
+      tenantId: tenant.id,
+      planVersionId: tight.versionId,
+    })
+    expect(await listLocations(application.database, tenant.id)).toHaveLength(2)
+    await expect(platform.database
+      .updateTable('plan_entitlements')
+      .set({ limit_value: 9 })
+      .where('plan_version_id', '=', tight.versionId)
+      .execute()).rejects.toMatchObject({ code: '42501' })
+
+    const addon = await createAddon(platform.database, {
+      key: `extra-location-${randomUUID().slice(0, 8)}`,
+      name: 'Extra location',
+      entitlementKey: 'locations.max',
+      increment: 1,
+    })
+    await addSubscriptionAddon(platform.database, 'platform-admin-123', {
+      tenantId: tenant.id,
+      addonId: addon.id,
+      quantity: 1,
+    })
+    const provider = createManualBillingProvider(platform.database, 'platform-admin-123')
+    await provider.changePlan({ tenantId: tenant.id, planVersionId: roomy.versionId })
+    await createLocation(application.database, 'billing-test', {
+      tenantId: tenant.id,
+      name: 'Add-on Branch',
+      slug: 'addon-branch',
+      timezone: 'Asia/Karachi',
+    })
+    expect(await listLocations(application.database, tenant.id)).toHaveLength(3)
+    const invoice = await provider.issueInvoice({
+      tenantId: tenant.id,
+      amountMinor: 250000,
+      currency: 'PKR',
+    })
+    expect(await provider.handlePaymentNotice({
+      invoiceId: invoice.invoiceId,
+      providerRef: 'raast-test',
+      paid: true,
+    })).toEqual({ status: 'paid' })
+    await expect(provider.handlePaymentNotice({
+      invoiceId: invoice.invoiceId,
+      providerRef: 'raast-test',
+      paid: true,
+    })).rejects.toMatchObject({ code: 'conflict' })
+
+    await recordUsage(application.database, {
+      tenantId: tenant.id,
+      key: 'automation.runs.monthly',
+      quantity: 1,
+      sourceRef: `run-${tenant.id}`,
+    })
+    const replay = await recordUsage(application.database, {
+      tenantId: tenant.id,
+      key: 'automation.runs.monthly',
+      quantity: 1,
+      sourceRef: `run-${tenant.id}`,
+    })
+    expect(replay.recorded).toBe(false)
+    expect(await readUsage(application.database, tenant.id)).toEqual([
+      expect.objectContaining({ entitlementKey: 'automation.runs.monthly', quantity: 1 }),
+    ])
+    await expect(recordUsage(application.database, {
+      tenantId: tenant.id,
+      key: 'automation.runs.monthly',
+      quantity: 1,
+      sourceRef: `run-again-${tenant.id}`,
+    })).rejects.toBeInstanceOf(EntitlementError)
+
+    await expect(withTenant(application.database, tenant.id, (transaction) =>
+      assertEntitlement(transaction, {
+        tenantId: tenant.id,
+        key: 'domains.custom.max',
+        delta: 1,
+        liveUsage: 1,
+      }))).rejects.toMatchObject({ code: 'entitlement_exceeded' })
+  })
+
+  it('lets only one of two concurrent location creates pass a single remaining seat', async () => {
+    const tenant = await createTenant(platform.database, 'platform-admin-123', {
+      name: 'Concurrency Tenant',
+      slug: `race-${randomUUID().slice(0, 8)}`,
+    })
+    const plan = await createPlan(platform.database, {
+      key: `single-location-${randomUUID().slice(0, 8)}`,
+      name: 'Single location',
+      entitlements: [{ key: 'locations.max', limit: 1 }],
+    })
+    await startSubscription(platform.database, 'platform-admin-123', {
+      tenantId: tenant.id,
+      customerRef: `manual:${tenant.id}`,
+      planVersionId: plan.versionId,
+      status: 'active',
+    })
+    const results = await Promise.allSettled([1, 2].map((number) => createLocation(
+      application.database,
+      'billing-test',
+      {
+        tenantId: tenant.id,
+        name: `Race ${number}`,
+        slug: `race-${number}`,
+        timezone: 'Asia/Karachi',
+      },
+    )))
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1)
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1)
+    expect(await listLocations(application.database, tenant.id)).toHaveLength(1)
+  })
 })
+
+async function ensureTestAllowance(database: ReturnType<typeof createDatabase>['database']) {
+  const existing = await database
+    .selectFrom('plans')
+    .select('id')
+    .where('key', '=', 'test-allowance')
+    .executeTakeFirst()
+  if (existing) {
+    return database
+      .selectFrom('plan_versions')
+      .select(['id as versionId'])
+      .where('plan_id', '=', existing.id)
+      .orderBy('version_number', 'asc')
+      .executeTakeFirstOrThrow()
+  }
+  return createPlan(database, {
+    key: 'test-allowance',
+    name: 'Test allowance',
+    entitlements: [
+      { key: 'locations.max', limit: 100000 },
+      { key: 'practitioners.max', limit: 100000 },
+      { key: 'staff.seats.max', limit: 100000 },
+      { key: 'domains.custom.max', limit: 100000 },
+      { key: 'whatsapp.connections.max', limit: 100000 },
+      { key: 'storage.gb.max', limit: 100000 },
+      { key: 'automation.runs.monthly', includedQuantity: 100000, overagePolicy: 'block' },
+      { key: 'whatsapp.template_sends.monthly', includedQuantity: 100000 },
+      { key: 'ai.credits.monthly', includedQuantity: 100000, overagePolicy: 'block' },
+      { key: 'inbox.enabled', enabled: true },
+      { key: 'chatbot.enabled', enabled: true },
+      { key: 'site.branding_removal', enabled: true },
+      { key: 'api.access', enabled: true },
+    ],
+  })
+}

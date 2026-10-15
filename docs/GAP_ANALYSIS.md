@@ -274,8 +274,8 @@ and create bookings without cross-tenant access or double-booking.
 
 ### P2 — Commercial model, websites, domains and onboarding
 
-- [ ] Implement versioned plans, entitlements, subscriptions, add-ons, overrides, usage and billing ports.
-- [ ] Enforce every limit transactionally; downgrades must never delete tenant data.
+- [x] Implement versioned plans, entitlements, subscriptions, add-ons, overrides, usage and billing ports.
+- [x] Enforce every limit transactionally; downgrades must never delete tenant data.
 - [ ] Build the tenant site model, constrained branding/theme contract, publish/unpublish workflow and
    denormalized public read model.
 - [ ] Build the SSR public app with per-host caching, canonical URLs, structured data, dynamic sitemap and
@@ -306,12 +306,11 @@ booking workflow with reliable reminders and safe staff handoff.
 
 ## The next development slice
 
-Continue with P1 in dependency order. Tenant lifecycle, locations, memberships/invitations, operator
-console, controlled read-only support access, location-scoped contacts/consents, multi-location
-practitioner assignments, clinic service catalog, scheduling/booking, and practitioner CSV import/export
-are complete. Stable OpenAPI and the initial HIS integration boundary are now defined; next priority is
-P2 commercial plans and entitlements, pending owner-defined pricing and tiers. Do not add clinical
-records, diagnoses, prescriptions, or visit notes.
+P2 billing is in place: versioned plans, entitlements, subscriptions, add-ons, overrides, usage,
+manual invoices, and transactional limits. Plan versions do not store prices. Operator invoices use
+an amount entered at issue time. Owner-defined tiers and prices remain a prerequisite to charging
+tenants. Next priority is the tenant site model, branding contract, and publish workflow. Do not add
+clinical records, diagnoses, prescriptions, or visit notes.
 
 ## Validation baseline
 
@@ -345,8 +344,15 @@ At the time of this review:
 - OpenAPI contract v1.0.0 and shared HIS appointment request/event schemas are published; appointment
    creation accepts tenant/location-scoped idempotency keys. No external HIS connection is enabled.
 - No production resources, real domains, Meta accounts, billing, or patient data were touched.
-- Next recommended priority: P2 versioned plans and entitlements; owner input on pricing and plan tiers
-   remains a prerequisite to subscription launch.
+- P2 billing slice is implemented locally. Plans, immutable versions, entitlements, add-ons,
+   overrides, subscriptions, usage events, and the manual `BillingProvider` are in the API. Location,
+   practitioner, and staff-seat creates enforce limits inside the same transaction. Domain, WhatsApp
+   connection, and storage limits require the caller to pass live usage until those modules exist.
+   Downgrades change the plan version and do not delete tenant rows. No catalog prices are stored.
+- Validation for this slice: API unit tests 190 passed; PostgreSQL integration tests 21 passed;
+   migration `0032_plans_entitlements.sql` applied on the local test database.
+- Next recommended priority: P2 tenant site model and publish workflow. Owner input on pricing and
+   plan tiers remains a prerequisite to subscription launch.
 - Cognito app-client setup and initial platform-staff provisioning remain explicit identity deployment
    gates; production region/data-residency remains the real-patient-data gate.
 - Proposals were initially selected autonomously without owner approval; no priority overrides or skipped

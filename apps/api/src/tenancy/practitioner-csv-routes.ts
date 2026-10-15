@@ -1,6 +1,7 @@
 import type { FastifyInstance, preHandlerHookHandler } from 'fastify'
 import type { Kysely } from 'kysely'
 import type { ApiDatabase } from '../db/schema.js'
+import { EntitlementError } from '../billing/entitlement-service.js'
 import { requireTenantPermission } from '../access/tenant-permissions.js'
 import {
   PractitionerCsvError,
@@ -77,7 +78,7 @@ const csvImportErrorResponseSchema = {
       type: 'object',
       additionalProperties: false,
       properties: {
-        error: { type: 'string', enum: ['invalid_csv_request', 'location_context_required'] },
+        error: { type: 'string', enum: ['invalid_csv_request', 'location_context_required', 'subscription_required', 'entitlement_exceeded', 'expansion_blocked', 'usage_required'] },
       },
       required: ['error'],
     },
@@ -230,6 +231,7 @@ export function registerPractitionerCsvRoutes(
         return reply.status(201).send(imported)
       } catch (error) {
         if (error instanceof z.ZodError) return reply.status(400).send({ error: 'invalid_csv_request' })
+        if (error instanceof EntitlementError) return reply.status(409).send({ error: error.code })
         if (error instanceof PractitionerCsvError) {
           return reply
             .status(error.code === 'registration_exists' ? 409 : 400)

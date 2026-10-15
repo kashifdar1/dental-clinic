@@ -280,6 +280,118 @@ export interface AppointmentStatusHistoryTable {
   occurred_at: Timestamp
 }
 
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'canceled'
+export type EntitlementKind = 'limit' | 'flag' | 'meter'
+
+export interface PlansTable {
+  id: string
+  key: string
+  name: string
+  status: 'active' | 'retired'
+  created_at: Timestamp
+}
+
+export interface PlanVersionsTable {
+  id: string
+  plan_id: string
+  version_number: number
+  status: 'published' | 'retired'
+  created_at: Timestamp
+}
+
+export interface PlanEntitlementsTable {
+  id: string
+  plan_version_id: string
+  entitlement_key: string
+  kind: EntitlementKind
+  limit_value: number | null
+  flag_enabled: boolean | null
+  included_quantity: number | null
+  overage_policy: 'block' | 'allow' | 'informational' | null
+}
+
+export interface AddonsTable {
+  id: string
+  key: string
+  name: string
+  entitlement_key: string
+  increment: number
+  status: 'active' | 'retired'
+  created_at: Timestamp
+}
+
+export interface SubscriptionsTable {
+  id: string
+  tenant_id: string
+  plan_version_id: string
+  status: SubscriptionStatus
+  customer_ref: string
+  trial_ends_at: Timestamp | null
+  current_period_start: Timestamp
+  current_period_end: Timestamp
+  past_due_since: Timestamp | null
+  canceled_at: Timestamp | null
+  created_at: Timestamp
+}
+
+export interface SubscriptionItemsTable {
+  id: string
+  tenant_id: string
+  subscription_id: string
+  addon_id: string
+  quantity: number
+  created_at: Timestamp
+}
+
+export interface EntitlementOverridesTable {
+  id: string
+  tenant_id: string
+  entitlement_key: string
+  delta: number | null
+  flag_enabled: boolean | null
+  reason: string
+  actor_subject: string
+  expires_at: Timestamp | null
+  created_at: Timestamp
+}
+
+export interface EntitlementCountersTable {
+  tenant_id: string
+  entitlement_key: string
+  live_count: number
+}
+
+export interface UsageEventsTable {
+  id: string
+  tenant_id: string
+  entitlement_key: string
+  quantity: number
+  source_ref: string
+  period_start: string
+  occurred_at: Timestamp
+}
+
+export interface UsageRollupsTable {
+  tenant_id: string
+  entitlement_key: string
+  period_start: string
+  quantity: number
+  updated_at: Timestamp
+}
+
+export interface InvoicesTable {
+  id: string
+  tenant_id: string
+  subscription_id: string | null
+  amount_minor: number
+  currency_code: string
+  status: 'issued' | 'paid' | 'void'
+  issued_by_subject: string
+  external_reference: string | null
+  issued_at: Timestamp
+  paid_at: Timestamp | null
+}
+
 export interface AppointmentIdempotencyKeysTable {
   id: string
   tenant_id: string
@@ -318,4 +430,15 @@ export interface ApiDatabase {
   appointments: AppointmentsTable
   appointment_status_history: AppointmentStatusHistoryTable
   appointment_idempotency_keys: AppointmentIdempotencyKeysTable
+  plans: PlansTable
+  plan_versions: PlanVersionsTable
+  plan_entitlements: PlanEntitlementsTable
+  addons: AddonsTable
+  subscriptions: SubscriptionsTable
+  subscription_items: SubscriptionItemsTable
+  entitlement_overrides: EntitlementOverridesTable
+  entitlement_counters: EntitlementCountersTable
+  usage_events: UsageEventsTable
+  usage_rollups: UsageRollupsTable
+  invoices: InvoicesTable
 }

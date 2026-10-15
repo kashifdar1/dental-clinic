@@ -5,6 +5,7 @@ import type { AuthenticatedIdentity, Role } from '@clinic-hub/shared'
 import { RoleSchema } from '@clinic-hub/shared'
 import type { ApiDatabase } from '../db/schema.js'
 import { appendAuditEvent } from '../audit/append-audit-event.js'
+import { assertEntitlement } from '../billing/entitlement-service.js'
 import { tenantHasPermission } from '../access/tenant-permissions.js'
 import { withTenant } from '../tenant/with-tenant.js'
 
@@ -106,6 +107,7 @@ export async function createInvitation(
       .where('status', '=', 'pending')
       .executeTakeFirst()
     if (existingInvite) throw new InvitationError('invalid')
+    await assertEntitlement(transaction, { tenantId, key: 'staff.seats.max', delta: 1 })
 
     const token = randomBytes(32).toString('base64url')
     const id = randomUUID()

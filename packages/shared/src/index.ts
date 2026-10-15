@@ -35,6 +35,30 @@ export {
   IdempotencyKeySchema,
 } from './his-contracts.js'
 export type { HISAppointmentEvent, HISAppointmentRequest } from './his-contracts.js'
+export {
+  ENTITLEMENT_CATALOG,
+  ENTITLEMENT_KEYS,
+  EXPANDING_SUBSCRIPTION_STATUSES,
+  EntitlementKeySchema,
+  OPEN_SUBSCRIPTION_STATUSES,
+  OveragePolicySchema,
+  OVERAGE_POLICIES,
+  PlanEntitlementInputSchema,
+  CreatePlanSchema,
+  SUBSCRIPTION_STATUSES,
+  SubscriptionStatusSchema,
+  combineAllowance,
+  entitlementKind,
+} from './billing.js'
+export type {
+  BillingProvider,
+  CreatePlanInput,
+  EntitlementKey,
+  EntitlementKind,
+  OveragePolicy,
+  PlanEntitlementInput,
+  SubscriptionStatus,
+} from './billing.js'
 
 export interface AuthenticatedIdentity {
   subject: string

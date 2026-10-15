@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { Kysely } from 'kysely'
 import type { ApiDatabase } from '../db/schema.js'
 import { appendAuditEvent } from '../audit/append-audit-event.js'
+import { assertEntitlement } from '../billing/entitlement-service.js'
 import { withTenant } from '../tenant/with-tenant.js'
 
 const TenantIdSchema = z.string().uuid()
@@ -50,6 +51,7 @@ export async function createLocation(
 
   try {
     await withTenant(database, tenantId, async (transaction) => {
+      await assertEntitlement(transaction, { tenantId, key: 'locations.max', delta: 1 })
       await transaction
         .insertInto('locations')
         .values({ id, tenant_id: tenantId, name, slug, timezone })

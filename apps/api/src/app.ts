@@ -49,6 +49,8 @@ import {
   updateLocationOffering,
   updatePractitionerServiceStatus,
 } from './tenancy/catalog-service.js'
+import { registerBillingRoutes } from './billing/billing-routes.js'
+import { EntitlementError } from './billing/entitlement-service.js'
 import { registerSchedulingRoutes } from './tenancy/scheduling-routes.js'
 import { registerPractitionerCsvRoutes } from './tenancy/practitioner-csv-routes.js'
 import { z } from 'zod'
@@ -316,6 +318,14 @@ export function createApi(options: ApiOptions) {
           : undefined,
       ),
     ]
+    registerBillingRoutes(routes, {
+      tenantDatabase: options.tenantDatabase,
+      platformDatabase: options.platformDatabase,
+      tenantRealmGuard,
+      tenantUnavailable,
+      platformStaffGuard,
+      platformDatabaseUnavailable,
+    })
     routes.get(
       '/v1/platform/me',
       {
@@ -516,7 +526,7 @@ export function createApi(options: ApiOptions) {
           if (error instanceof z.ZodError) {
             return reply.status(400).send({ error: 'invalid_location' })
           }
-          if (error instanceof LocationError) {
+          if (error instanceof LocationError || error instanceof EntitlementError) {
             return reply.status(409).send({ error: error.code })
           }
           throw error
@@ -911,7 +921,9 @@ export function createApi(options: ApiOptions) {
           return reply.status(201).send(practitioner)
         } catch (error) {
           if (error instanceof z.ZodError) return reply.status(400).send({ error: 'invalid_practitioner' })
-          if (error instanceof PractitionerError) return reply.status(409).send({ error: error.code })
+          if (error instanceof PractitionerError || error instanceof EntitlementError) {
+            return reply.status(409).send({ error: error.code })
+          }
           throw error
         }
       },
@@ -1701,6 +1713,11 @@ export function createApi(options: ApiOptions) {
               properties: { error: { type: 'string' } },
               required: ['error'],
             },
+            409: {
+              type: 'object',
+              properties: { error: { type: 'string' } },
+              required: ['error'],
+            },
             403: {
               type: 'object',
               properties: { error: { type: 'string' } },
@@ -1743,6 +1760,7 @@ export function createApi(options: ApiOptions) {
             const status = error.code === 'forbidden' ? 403 : 400
             return reply.status(status).send({ error: error.code })
           }
+          if (error instanceof EntitlementError) return reply.status(409).send({ error: error.code })
           throw error
         }
       },
